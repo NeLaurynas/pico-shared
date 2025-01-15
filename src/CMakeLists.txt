@@ -15,6 +15,8 @@ pico_sdk_init()
 add_library(pico-shared STATIC
 		utils.c
 		utils.h
+		shared_modules/mcp/mcp.c
+		shared_modules/mcp/mcp.h
 		shared_config.h
 )
 
