@@ -132,7 +132,7 @@ u8 utils_scaled_pwm_percentage(i16 val, i32 deadzone, i32 max_val) {
 	if (x <= deadzone) {
 		return 0;
 	} if (x >= max_val) {
-		return 10000;
+		return 100;
 	}
 
 	return (x - deadzone) * 100 / (max_val - deadzone);
