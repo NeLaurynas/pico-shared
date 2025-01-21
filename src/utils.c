@@ -4,6 +4,7 @@
 #include "utils.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <hardware/adc.h>
 #include <hardware/clocks.h>
 #include <pico/time.h>
@@ -124,4 +125,15 @@ void utils_internal_led(const bool on) {
 u16 utils_proportional_reduce(const u16 number, u16 step, const u16 total_steps) {
 	if (step >= total_steps) step = total_steps;
 	return (float)number / total_steps * step;
+}
+
+u8 utils_scaled_pwm_percentage(i16 val, i32 deadzone, i32 max_val) {
+	const u16 x = abs(val);
+	if (x <= deadzone) {
+		return 0;
+	} if (x >= max_val) {
+		return 10000;
+	}
+
+	return (x - deadzone) * 100 / (max_val - deadzone);
 }
