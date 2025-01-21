@@ -1,7 +1,7 @@
 #ifndef SHARED_CONFIG_H
 #define SHARED_CONFIG_H
 
-#include <stdint.h>
+#include <pico/types.h>
 
 // TYPEDEFS
 typedef uint32_t u32;
