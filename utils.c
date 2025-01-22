@@ -119,6 +119,7 @@ void utils_error_mode(const u8 code) {
 }
 
 void utils_internal_led(const bool on) {
+	if (INTERNAL_LED == 0) return; // don't touch wifi led...
 	gpio_put(INTERNAL_LED, on);
 }
 
