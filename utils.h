@@ -6,10 +6,13 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <hardware/pwm.h>
 
 #include "shared_config.h"
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0])) // will not work for decayed arrays
+
+#define DMA_IRQ(irq) (irq == 0 ? DMA_IRQ_0 : DMA_IRQ_1)
 
 u8 utils_min_u8(u8 x, u8 y);
 u16 utils_min_u16(u16 x, u16 y);
@@ -60,5 +63,7 @@ void utils_internal_led(bool on);
 u16 utils_proportional_reduce(u16 number, u16 step, u16 total_steps);
 
 u8 utils_scaled_pwm_percentage(i16 val, i32 deadzone, i32 max_val);
+
+u16 *utils_pwm_cc_for_16bit(const u8 slice, const u8 channel);
 
 #endif //UTILS_H

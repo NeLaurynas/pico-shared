@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <hardware/adc.h>
 #include <hardware/clocks.h>
+#include <hardware/pwm.h>
 #include <pico/time.h>
 
 #include "shared_config.h"
@@ -137,4 +138,10 @@ u8 utils_scaled_pwm_percentage(const i16 val, const i32 deadzone, const i32 max_
 	}
 
 	return (x - deadzone) * 100 / (max_val - deadzone);
+}
+
+u16 *utils_pwm_cc_for_16bit(const u8 slice, const u8 channel) {
+	assert(channel == 0 || channel == 1);
+
+	return (u16 *)&pwm_hw->slice[slice].cc + channel;
 }

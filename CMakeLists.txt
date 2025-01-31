@@ -81,6 +81,7 @@ target_link_libraries(pico-shared
 		hardware_pio
 		hardware_adc
 		hardware_dma
+		hardware_pwm
 		pico_rand
 		$<$<CONFIG:Debug>:hardware_uart>
 )
