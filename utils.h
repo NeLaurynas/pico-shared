@@ -52,9 +52,9 @@ float utils_calculate_pio_clk_div_ns(float instruction_execution_in_ns);
 #define utils_printf(...) (void)0
 #endif
 
-int32_t utils_time_diff_ms(u32 start_us, u32 end_us);
+u32 utils_time_diff_ms(u32 start_us, u32 end_us);
 
-int32_t utils_time_diff_us(u32 start_us, u32 end_us);
+u32 utils_time_diff_us(u32 start_us, u32 end_us);
 
 void utils_error_mode(u8 code);
 
@@ -64,6 +64,8 @@ u16 utils_proportional_reduce(u16 number, u16 step, u16 total_steps);
 
 u8 utils_scaled_pwm_percentage(i16 val, i32 deadzone, i32 max_val);
 
-u16 *utils_pwm_cc_for_16bit(const u8 slice, const u8 channel);
+u16 *utils_pwm_cc_for_16bit(u8 slice, u8 channel);
+
+void utils_print_time_elapsed(const char *title, u32 start_us);
 
 #endif //UTILS_H

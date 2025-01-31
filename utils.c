@@ -87,12 +87,12 @@ float utils_calculate_pio_clk_div_ns(const float instruction_execution_in_ns) {
 	return utils_calculate_pio_clk_div(instruction_execution_in_ns / 1'000.0f);
 }
 
-inline int32_t utils_time_diff_ms(const u32 start_us, const u32 end_us) {
-	return (int32_t)(end_us - start_us) / 1000;
+inline u32 utils_time_diff_ms(const u32 start_us, const u32 end_us) {
+	return (end_us - start_us) / 1000;
 }
 
-int32_t utils_time_diff_us(const u32 start_us, const u32 end_us) {
-	return (int32_t)(end_us - start_us);
+inline u32 utils_time_diff_us(const u32 start_us, const u32 end_us) {
+	return end_us - start_us;
 }
 
 void utils_error_mode(const u8 code) {
@@ -133,7 +133,8 @@ u8 utils_scaled_pwm_percentage(const i16 val, const i32 deadzone, const i32 max_
 	const u16 x = abs(val);
 	if (x <= deadzone) {
 		return 0;
-	} if (x >= max_val) {
+	}
+	if (x >= max_val) {
 		return 100;
 	}
 
@@ -143,5 +144,12 @@ u8 utils_scaled_pwm_percentage(const i16 val, const i32 deadzone, const i32 max_
 u16 *utils_pwm_cc_for_16bit(const u8 slice, const u8 channel) {
 	assert(channel == 0 || channel == 1);
 
-	return (u16 *)&pwm_hw->slice[slice].cc + channel;
+	return (u16*)&pwm_hw->slice[slice].cc + channel;
+}
+
+void utils_print_time_elapsed(const char *title, const u32 start_us) {
+	const auto end = time_us_32();
+	const auto elapsed = utils_time_diff_us(start_us, end);
+	const float elapsed_ms = (float)elapsed / 1000.0f;
+	utils_printf("'%s' took: %.2f ms (%ld us)\n", title, elapsed_ms, elapsed);
 }

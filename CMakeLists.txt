@@ -31,7 +31,7 @@ target_compile_options(pico-shared PRIVATE
 		-Winline
 		#		-Werror
 		-Wno-error=old-style-declaration
-		-march=armv8-m.main
+		-mcpu=cortex-m33
 		-mtune=cortex-m33
 		-mfpu=fpv5-sp-d16
 		-mthumb
@@ -48,7 +48,7 @@ target_compile_options(pico-shared PRIVATE
 		-O3
 		-s
 		-g0
-		-march=armv8-m.main
+		-mcpu=cortex-m33
 		-mtune=cortex-m33
 		-mfpu=fpv5-sp-d16
 		-mthumb
@@ -62,7 +62,7 @@ target_compile_options(pico-shared PRIVATE
 )
 
 target_link_options(pico-shared PRIVATE
-		-march=armv8-m.main
+		-mcpu=cortex-m33
 		-mtune=cortex-m33
 		-mfpu=fpv5-sp-d16
 		-mthumb
