@@ -18,6 +18,9 @@ add_library(pico-shared STATIC
 		shared_modules/mcp/mcp.c
 		shared_modules/mcp/mcp.h
 		shared_config.h
+		shared_modules/mp3/mp3.c
+		shared_modules/mp3/mp3.h
+		shared_modules/mp3/horn_mp3.h
 )
 
 get_target_property(PICO_STD_INCLUDE pico_stdlib INTERFACE_INCLUDE_DIRECTORIES)

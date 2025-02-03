@@ -29,6 +29,11 @@ typedef int8_t i8;
 #define MOD_MCP_ADDR2		0x21
 #define MOD_MCP_GPIO_CACHE_MS 6
 
+// MP3
+#define MOD_MP3_PIN 15
+#define MOD_MP3_DMA_CH1 2
+#define MOD_MP3_IRQ 0
+
 // MISC
 #define INTERNAL_LED 25
 
