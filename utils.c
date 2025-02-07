@@ -129,8 +129,8 @@ u16 utils_proportional_reduce(const u16 number, u16 step, const u16 total_steps)
 	return (float)number / total_steps * step;
 }
 
-u8 utils_scaled_pwm_percentage(const i16 val, const i32 deadzone, const i32 max_val) {
-	const u16 x = abs(val);
+i32 utils_scaled_pwm_percentage(const i32 val, const i32 deadzone, const i32 max_val) {
+	const i32 x = abs(val);
 	if (x <= deadzone) {
 		return 0;
 	}

@@ -62,7 +62,7 @@ void utils_internal_led(bool on);
 
 u16 utils_proportional_reduce(u16 number, u16 step, u16 total_steps);
 
-u8 utils_scaled_pwm_percentage(i16 val, i32 deadzone, i32 max_val);
+i32 utils_scaled_pwm_percentage(i32 val, i32 deadzone, i32 max_val);
 
 u16 *utils_pwm_cc_for_16bit(u8 slice, u8 channel);
 
