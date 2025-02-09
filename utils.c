@@ -95,7 +95,7 @@ inline u32 utils_time_diff_us(const u32 start_us, const u32 end_us) {
 	return end_us - start_us;
 }
 
-void utils_error_mode(const u8 code) {
+void utils_error_mode(const i32 code) {
 	utils_internal_led(false);
 	const u8 long_blink = code / 10;
 	const u8 short_blink = code % 10;
