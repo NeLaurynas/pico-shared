@@ -14,16 +14,17 @@
 
 #define DMA_IRQ(irq) (irq == 0 ? DMA_IRQ_0 : DMA_IRQ_1)
 
-u8 utils_min_u8(u8 x, u8 y);
-u16 utils_min_u16(u16 x, u16 y);
-u32 utils_min_u32(u32 x, u32 y);
+// u8 utils_min_u8(u8 x, u8 y);
+// u16 utils_min_u16(u16 x, u16 y);
+// u32 utils_min_u32(u32 x, u32 y);
+// i32 utils_min_i32(i32 x, i32 y);
 #define utils_min(x, y) \
-	_Generic((x), \
-		u8: utils_min_u8, \
-		u16: utils_min_u16, \
-		u32: utils_min_u32, \
-		int: utils_min_u32 \
-	)(x, y)
+_Generic((x), \
+u8: utils_min_u8, \
+u16: utils_min_u16, \
+u32: utils_min_u32, \
+i32: utils_min_i32 \
+)(x, y)
 
 void utils_swap_u8(u8 *x, u8 *y);
 void utils_swap_u16(u16 *x, u16 *y);

@@ -13,15 +13,19 @@
 #include "shared_config.h"
 #include "pico/rand.h"
 
-inline u8 utils_min_u8(const u8 x, const u8 y) {
+static inline u8 utils_min_u8(const u8 x, const u8 y) {
 	return x < y ? x : y;
 }
 
-inline u16 utils_min_u16(const u16 x, const u16 y) {
+static inline u16 utils_min_u16(const u16 x, const u16 y) {
 	return x < y ? x : y;
 }
 
-inline u32 utils_min_u32(const u32 x, const u32 y) {
+static inline u32 utils_min_u32(const u32 x, const u32 y) {
+	return x < y ? x : y;
+}
+
+static inline i32 utils_min_i32(const i32 x, const i32 y) {
 	return x < y ? x : y;
 }
 
