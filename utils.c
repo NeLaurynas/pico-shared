@@ -97,19 +97,19 @@ inline u32 utils_time_diff_us(const u32 start_us, const u32 end_us) {
 
 void utils_error_mode(const i32 code) {
 	utils_internal_led(false);
-	const u8 long_blink = code / 10;
-	const u8 short_blink = code % 10;
+	const i32 long_blink = code / 10;
+	const i32 short_blink = code % 10;
 	// ReSharper disable once CppDFAEndlessLoop
 	for (;;) {
 		utils_printf("!!! ERROR MODE: %d\n", code);
-		for (u8 i = 0; i < long_blink; i++) {
+		for (auto i = 0; i < long_blink; i++) {
 			utils_internal_led(true);
 			sleep_ms(500);
 			utils_internal_led(false);
 			sleep_ms(500);
 		}
 		sleep_ms(400);
-		for (u8 i = 0; i < short_blink; i++) {
+		for (auto i = 0; i < short_blink; i++) {
 			utils_internal_led(true);
 			sleep_ms(75);
 			utils_internal_led(false);
@@ -124,7 +124,7 @@ void utils_internal_led(const bool on) {
 	gpio_put(INTERNAL_LED, on);
 }
 
-u16 utils_proportional_reduce(const u16 number, u16 step, const u16 total_steps) {
+i32 utils_proportional_reduce(const i32 number, i32 step, const i32 total_steps) {
 	if (step >= total_steps) step = total_steps;
 	return (float)number / total_steps * step;
 }
