@@ -13,24 +13,6 @@
 #include "shared_config.h"
 #include "pico/rand.h"
 
-void utils_swap_u8(u8 *x, u8 *y) {
-	const auto tmp = *x;
-	*x = *y;
-	*y = tmp;
-}
-
-void utils_swap_u16(u16 *x, u16 *y) {
-	const auto tmp = *x;
-	*x = *y;
-	*y = tmp;
-}
-
-void utils_swap_u32(u32 *x, u32 *y) {
-	const auto tmp = *x;
-	*x = *y;
-	*y = tmp;
-}
-
 u32 utils_random_in_range(u32 fromInclusive, u32 toInclusive) {
 	if (fromInclusive > toInclusive) {
 		const auto tmp = toInclusive;

@@ -34,15 +34,32 @@ u32: utils_min_u32, \
 i32: utils_min_i32 \
 )(x, y)
 
-void utils_swap_u8(u8 *x, u8 *y);
-void utils_swap_u16(u16 *x, u16 *y);
-void utils_swap_u32(u32 *x, u32 *y);
+static void utils_swap_u8(u8 *x, u8 *y) {
+	const auto tmp = *x;
+	*x = *y;
+	*y = tmp;
+}
+static void utils_swap_u16(u16 *x, u16 *y) {
+	const auto tmp = *x;
+	*x = *y;
+	*y = tmp;
+}
+static void utils_swap_u32(u32 *x, u32 *y) {
+	const auto tmp = *x;
+	*x = *y;
+	*y = tmp;
+}
+static void utils_swap_i32(i32 *x, i32 *y) {
+	const auto tmp = *x;
+	*x = *y;
+	*y = tmp;
+}
 #define utils_swap(x, y) \
 _Generic((x), \
 u8*: utils_swap_u8, \
 u16*: utils_swap_u16, \
 u32*: utils_swap_u32, \
-int*: utils_swap_u32 \
+i32*: utils_swap_i32 \
 )(x, y)
 
 u32 utils_random_in_range(u32 fromInclusive, u32 toInclusive);
