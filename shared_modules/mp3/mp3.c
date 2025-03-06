@@ -46,7 +46,7 @@
 // 	bool primed;
 // } dma_buffer_t;
 //
-// static dma_buffer_t dma_buffer1 = { 0 };
+// static dma_buffer_t dma_buffer1 = { 0 }; // uint8_t for 8 bit pwm
 // static dma_buffer_t dma_buffer2 = { 0 };
 // static dma_buffer_t *dma_buffers[2] = { &dma_buffer1, &dma_buffer2 };
 // static mp3d_sample_t pcm_buffer[PCM_BUFF_SIZE] = { 0 };

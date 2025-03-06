@@ -72,6 +72,14 @@ float utils_calculate_pio_clk_div(float instruction_execution_in_us);
 
 float utils_calculate_pio_clk_div_ns(float instruction_execution_in_ns);
 
+/**
+ * Calculates PWM clock. 1 khz = every 1 ms, 2 khz = ever 0.5 ms, etc
+ *
+ * @param top PWM TOP configuration (wrap)
+ * @param freq_khz Desired frequency (check debug messages if clock can be generated)
+ */
+float utils_calculate_pwm_divider(u32 top, float freq_khz);
+
 #if defined(DBG) && DBG
 #define utils_printf(...) printf(__VA_ARGS__)
 #else

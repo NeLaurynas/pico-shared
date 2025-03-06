@@ -57,6 +57,28 @@ float utils_calculate_pio_clk_div_ns(const float instruction_execution_in_ns) {
 	return utils_calculate_pio_clk_div(instruction_execution_in_ns / 1'000.0f);
 }
 
+float utils_calculate_pwm_divider(const u32 top, const float freq_khz) {
+	const auto clock = clock_get_hz(clk_sys);
+
+	if (freq_khz <= 0.0f) {
+		return 1.0f;
+	}
+
+	const float freq_hz = freq_khz * 1000.0f;
+	float divider = (float)clock / (freq_hz * (top + 1));
+
+	// Clamp the divider between 1.0 and 256.0
+	if (divider < 1.0f) {
+		utils_printf("!!! DIVIDER LESS THAN 1 (%f), CONSIDER ADJUSTING TOP\n", divider);
+		divider = 1.0f;
+	} else if (divider > 256.0f) {
+		utils_printf("!!! DIVIDER MORE THAN 256 (%f), CONSIDER ADJUSTING TOP\n", divider);
+		divider = 256.0f;
+	}
+
+	return divider;
+}
+
 inline u32 utils_time_diff_ms(const u32 start_us, const u32 end_us) {
 	return (end_us - start_us) / 1000;
 }
