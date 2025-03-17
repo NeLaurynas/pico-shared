@@ -41,24 +41,27 @@ static bool init = false;
 static void write_register(const u8 address, const u8 regist, const u8 value) {
 	const u8 data[2] = { regist, value };
 	auto const result = i2c_write_blocking(MOD_MCP_I2C_PORT, address, data, 2, false);
-	if (result == PICO_ERROR_GENERIC) utils_error_mode(address == MOD_MCP_ADDR1 ? 11 : 12); // mode(11) (mode12)
+	if (result < PICO_ERROR_NONE) utils_error_mode(address == MOD_MCP_ADDR1 ? 11 : 12); // mode(11) (mode12)
 }
 
 static u8 read_register(const u8 address, const u8 regist) {
 	u8 value;
 	auto result = i2c_write_blocking(MOD_MCP_I2C_PORT, address, &regist, 1, true);
-	if (result == PICO_ERROR_GENERIC) utils_error_mode(address == MOD_MCP_ADDR1 ? 13 : 14); // mode(13) (mode14)
+	if (result < PICO_ERROR_NONE) utils_error_mode(address == MOD_MCP_ADDR1 ? 13 : 14); // mode(13) (mode14)
 	result = i2c_read_blocking(MOD_MCP_I2C_PORT, address, &value, 1, false);
-	if (result == PICO_ERROR_GENERIC) utils_error_mode(address == MOD_MCP_ADDR1 ? 15 : 16); // mode(15) mode(16)
+	if (result < PICO_ERROR_NONE) utils_error_mode(address == MOD_MCP_ADDR1 ? 15 : 16); // mode(15) mode(16)
 	return value;
 }
 
 static u16 read_dual_registers(const u8 address, const u8 regist) {
 	u8 value[2] = { 0 };
 	auto result = i2c_write_blocking(MOD_MCP_I2C_PORT, address, &regist, 1, true);
-	if (result == PICO_ERROR_GENERIC) utils_error_mode(address == MOD_MCP_ADDR1 ? 17 : 18); // mode(17) (mode18)
-	result = i2c_read_blocking(MOD_MCP_I2C_PORT, address, value, 2, false);
-	if (result == PICO_ERROR_GENERIC) utils_error_mode(address == MOD_MCP_ADDR1 ? 19 : 20); // mode(19) (mode20)
+	if (result < PICO_ERROR_NONE) utils_error_mode(address == MOD_MCP_ADDR1 ? 17 : 18); // mode(17) (mode18)
+	for (auto i = -1; i < MOD_MCP_WRITE_RETRY_COUNT; i++) {
+		result = i2c_read_blocking(MOD_MCP_I2C_PORT, address, value, 2, false);
+		if (result == PICO_ERROR_NONE) break;
+	}
+	if (result < PICO_ERROR_NONE) utils_error_mode(address == MOD_MCP_ADDR1 ? 19 : 20); // mode(19) (mode20)
 	return (value[1] << 8) | value[0];
 }
 
