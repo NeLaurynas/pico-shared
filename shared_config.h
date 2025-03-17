@@ -22,12 +22,13 @@ typedef int8_t i8;
  *  | M | B |       number          |
  *  ie: #define MOD_NUM_LEDG (u8)((0 << 7) | (1 << 6) | 1) // MCP - first bit - MCP 1, second bit - Bank B - pin 1
  */
-#define MOD_MCP_PIN_SDA		16
-#define MOD_MCP_PIN_SCL		17
-#define MOD_MCP_I2C_PORT	(&i2c0_inst)
-#define MOD_MCP_ADDR1		0x20
-#define MOD_MCP_ADDR2		0x21
-#define MOD_MCP_GPIO_CACHE_MS 6
+#define MOD_MCP_PIN_SDA				16
+#define MOD_MCP_PIN_SCL				17
+#define MOD_MCP_I2C_PORT			(&i2c0_inst)
+#define MOD_MCP_ADDR1				0x20
+#define MOD_MCP_ADDR2				0x21
+#define MOD_MCP_GPIO_CACHE_MS		6
+#define MOD_MCP_WRITE_RETRY_COUNT	3
 
 // MP3
 #define MOD_MP3_PIN 15
