@@ -59,7 +59,9 @@ static u16 read_dual_registers(const u8 address, const u8 regist) {
 	if (result < PICO_ERROR_NONE) utils_error_mode(address == MOD_MCP_ADDR1 ? 17 : 18); // mode(17) (mode18)
 	for (auto i = -1; i < MOD_MCP_WRITE_RETRY_COUNT; i++) {
 		result = i2c_read_blocking(MOD_MCP_I2C_PORT, address, value, 2, false);
-		if (result == PICO_ERROR_NONE) break;
+		if (result >= PICO_ERROR_NONE) break;
+		utils_printf("MCP RETRY: %d - %d\n", i + 1, result);
+		sleep_us(500);
 	}
 	if (result < PICO_ERROR_NONE) utils_error_mode(address == MOD_MCP_ADDR1 ? 19 : 20); // mode(19) (mode20)
 	return (value[1] << 8) | value[0];
