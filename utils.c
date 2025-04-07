@@ -116,9 +116,13 @@ void utils_internal_led(const bool on) {
 	gpio_put(INTERNAL_LED, on);
 }
 
-i32 utils_proportional_reduce(const i32 number, i32 step, const i32 total_steps) {
+i32 utils_proportional_reduce(const i32 number, i32 step, const i32 total_steps, const bool invert) {
 	if (step >= total_steps) step = total_steps;
-	return (float)number / total_steps * step;
+	if (number == 0) return 0;
+
+	const auto result = (i32)((float)number / total_steps * step);
+	if (invert) return number - result;
+	return result;
 }
 
 i32 utils_scaled_pwm_percentage(const i32 val, const i32 deadzone, const i32 max_val) {

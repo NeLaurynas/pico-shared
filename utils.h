@@ -177,7 +177,7 @@ void utils_error_mode(i32 code);
 
 void utils_internal_led(bool on);
 
-i32 utils_proportional_reduce(i32 number, i32 step, i32 total_steps);
+i32 utils_proportional_reduce(i32 number, i32 step, i32 total_steps, bool invert);
 
 i32 utils_scaled_pwm_percentage(i32 val, i32 deadzone, i32 max_val);
 
