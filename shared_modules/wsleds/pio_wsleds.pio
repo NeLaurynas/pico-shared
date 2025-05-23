@@ -1,0 +1,52 @@
+; Copyright (C) 2025 Laurynas 'Deviltry' Ekekeke
+; SPDX-License-Identifier: BSD-3-Clause
+
+; DMA sends X element array - buffer - containing 32 bits of data for X leds
+; we pull each buffer element for single LED
+; we loop through each bit and one bit signal is divided into three parts:
+; bit with value 0: 1/0/0 (high, low, low), bit with value 1: 1/1/0 (high, high, low)
+; 3 parts, each part takes 4 cycles:
+; 1st part - always 1/high for 4 cycles (MOV PINS, !NULL [3])
+; 2nd part - send 0/low on bit value 0, send 1/high on bit value 1 (OUT PINS, 1 [3])
+; 3rd part  - always 0/low: JMP !OSRE has_bits_nop SIDE 0 - 1 cycle, SIDE occurs before JMP (so starts sending 0/low)
+;	if !OSRE - executes has_bits_nop (while sending 0/low) for another 3 cycles before jumping to 1st part (NOP [1] SIDE 0 (2 cycles) + JMP (1 cycle) is 3 cycles)
+;	if OSRE - JMP w_target SIDE 0 (1 cycle) + previous JMP !OSRE (if doesn't jump - still consumes 1 cycle) - 2 cycles
+;		FIFO has queue of 4, DMA fills it out quickly, so if there's data - no stalling, just for 2 cycles PULL and OUT. (making 4 cycles if OSRE)
+;		if FIFO empty - LEDs don't need updating, so we're holding reset signal (50k ns or 50 us or 0.05 ms). Don't send new data for at least 0.05 ms from code...
+
+; cycle timing - time to send 0: for 250-550 ns send high, for 700-1000 ns send low; time to send 1: for 650-950 ns send high, for 300-600 ns send low
+; so each cycle should take between 87.5 ns to 118.75 ns; average is 103.125 ns - so 103 ns per cycle is safe bet, but 88 ns or even 87 ns works just fine too
+
+.program pio_wsleds
+.side_set 1 opt
+w_target:
+	PULL BLOCK SIDE 0				; last 1/3 part, if no data - it's the hold signal
+	OUT NULL, 8 SIDE 0 				; last 1/3 part, data is 24 bits, discard the rest
+
+has_bits:
+	MOV PINS, !NULL [3] 			; first 1/3 part, send 1
+	OUT PINS, 1 [3] 				; middle 1/3 part, send data bit - 0 or 1
+	JMP !OSRE has_bits_nop SIDE 0	; last 1/3 part - if OSR not empty - jump to has_bits_nop (consumes a cycle even if no jump; side 0 is sent before the cycle)
+	JMP w_target SIDE 0 			; last 1/3 part - go to PULL
+
+has_bits_nop:
+	NOP [1] SIDE 0 					; last 1/3 part - wait for two cycles
+	JMP has_bits SIDE 0 			; last 1/3 part - continue sending bits for one LED
+
+% c-sdk {
+void pio_wsleds_program_init(PIO pio, uint sm, uint offset, uint pin, float clk_div) {
+	pio_gpio_init(pio, pin);
+
+	pio_sm_config c = pio_wsleds_program_get_default_config(offset);
+
+	sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
+	sm_config_set_out_shift(&c, false, false, 32);
+	pio_sm_set_consecutive_pindirs(pio, sm, pin, 1, true); // 1 pin, is_out = true
+	sm_config_set_out_pins(&c, pin, 1); // set pin to be controlled with OUT PINS
+	sm_config_set_sideset_pins(&c, pin); // set pin to be controlled with SIDE
+
+	sm_config_set_clkdiv(&c, clk_div);
+
+	pio_sm_init(pio, sm, offset, &c);
+}
+%}

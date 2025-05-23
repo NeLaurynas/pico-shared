@@ -1,6 +1,7 @@
 #ifndef SHARED_CONFIG_H
 #define SHARED_CONFIG_H
 
+#include <hardware/i2c.h>
 #include <pico/types.h>
 
 // TYPEDEFS
@@ -34,6 +35,13 @@ typedef int8_t i8;
 #define MOD_MP3_PIN 15
 #define MOD_MP3_DMA_CH1 2
 #define MOD_MP3_IRQ 0
+
+// WSLEDS
+#define MOD_WSLEDS_LED_COUNT	64
+#define MOD_WSLEDS_PIO			pio0
+#define MOD_WSLEDS_SM			1
+#define MOD_WSLEDS_DMA_CH		1
+#define MOD_WSLEDS_PIN			18
 
 // MISC
 #define INTERNAL_LED 25

@@ -21,6 +21,11 @@ add_library(pico-shared STATIC
 		shared_modules/mp3/mp3.c
 		shared_modules/mp3/mp3.h
 		shared_modules/mp3/horn_mp3.h
+		shared_modules/wsleds/wsleds.c
+		shared_modules/wsleds/wsleds.h
+		shared_modules/wsleds/wsleds_data.h
+		anim.c
+		anim.h
 )
 
 get_target_property(PICO_STD_INCLUDE pico_stdlib INTERFACE_INCLUDE_DIRECTORIES)
@@ -70,6 +75,9 @@ target_link_options(pico-shared PRIVATE
 		-mfpu=fpv5-sp-d16
 		-mthumb
 )
+
+# PIO
+pico_generate_pio_header(pico-shared ${CMAKE_CURRENT_LIST_DIR}/shared_modules/wsleds/pio_wsleds.pio)
 
 target_link_libraries(pico-shared
 		pico_stdlib)
