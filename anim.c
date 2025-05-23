@@ -14,6 +14,18 @@ static void adjust_frame_by_speed_freq(const u16 frame, const u16 frame_count, c
 	*adjusted_frame = fmod(frame, *divisor) * speed;
 }
 
+u32 reduce_brightness(const u32 reduction, const u32 color) {
+	u16 r = (color >> 16) & 0b11111111;
+	u16 g = (color >> 8) & 0b11111111;
+	u16 b = color & 0b11111111;
+
+	r = (r > reduction) ? (r - reduction) : 0;
+	g = (g > reduction) ? (g - reduction) : 0;
+	b = (b > reduction) ? (b - reduction) : 0;
+
+	return (utils_min(r, 255) << 16) | (utils_min(g, 255) << 8) | utils_min(b, 255);
+}
+
 u8 anim_color_reduction(const anim_direction_t direction, const u16 frame, const u16 frame_count, const float speed,
 						const float freq) {
 
