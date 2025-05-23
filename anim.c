@@ -14,7 +14,7 @@ static void adjust_frame_by_speed_freq(const u16 frame, const u16 frame_count, c
 	*adjusted_frame = fmod(frame, *divisor) * speed;
 }
 
-u32 reduce_brightness(const u32 reduction, const u32 color) {
+u32 anim_reduce_brightness(const u32 reduction, const u32 color) {
 	u16 r = (color >> 16) & 0b11111111;
 	u16 g = (color >> 8) & 0b11111111;
 	u16 b = color & 0b11111111;

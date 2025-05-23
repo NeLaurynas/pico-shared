@@ -27,6 +27,6 @@ u8 anim_color_reduction(anim_direction_t direction, u16 frame, u16 frame_count, 
  */
 u32 anim_color_blend(u32 color_from, u32 color_to, u16 frame, u16 frame_count, float speed, float freq);
 
-u32 reduce_brightness(u32 reduction, u32 color);
+u32 anim_reduce_brightness(u32 reduction, u32 color);
 
 #endif //ANIM_H
