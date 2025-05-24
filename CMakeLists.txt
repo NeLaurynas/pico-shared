@@ -24,6 +24,9 @@ add_library(pico-shared STATIC
 		shared_modules/wsleds/wsleds.c
 		shared_modules/wsleds/wsleds.h
 		shared_modules/wsleds/wsleds_data.h
+		shared_modules/wsledswhite/wsledswhite.c
+		shared_modules/wsledswhite/wsledswhite.h
+		shared_modules/wsledswhite/wsledswhite_data.h
 		anim.c
 		anim.h
 )
@@ -78,6 +81,7 @@ target_link_options(pico-shared PRIVATE
 
 # PIO
 pico_generate_pio_header(pico-shared ${CMAKE_CURRENT_LIST_DIR}/shared_modules/wsleds/pio_wsleds.pio)
+pico_generate_pio_header(pico-shared ${CMAKE_CURRENT_LIST_DIR}/shared_modules/wsledswhite/pio_wsledswhite.pio)
 
 target_link_libraries(pico-shared
 		pico_stdlib)
