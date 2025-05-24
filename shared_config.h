@@ -37,7 +37,7 @@ typedef int8_t i8;
 #define MOD_MP3_IRQ 0
 
 // WSLEDS
-#define MOD_WSLEDS_LED_COUNT	64
+#define MOD_WSLEDS_LED_COUNT	120
 #define MOD_WSLEDS_PIO			pio0
 #define MOD_WSLEDS_SM			1
 #define MOD_WSLEDS_DMA_CH		1
