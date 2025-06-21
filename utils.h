@@ -38,6 +38,30 @@ u32: utils_min_u32, \
 i32: utils_min_i32 \
 )(x, y)
 
+static inline u8 utils_max_u8(const u8 x, const u8 y) {
+	return x > y ? x : y;
+}
+
+static inline u16 utils_max_u16(const u16 x, const u16 y) {
+	return x > y ? x : y;
+}
+
+static inline u32 utils_max_u32(const u32 x, const u32 y) {
+	return x > y ? x : y;
+}
+
+static inline i32 utils_max_i32(const i32 x, const i32 y) {
+	return x > y ? x : y;
+}
+
+#define utils_max(x, y) \
+_Generic((x), \
+u8:  utils_max_u8,\
+u16: utils_max_u16, \
+u32: utils_max_u32, \
+i32: utils_max_i32 \
+)(x, y)
+
 static void utils_swap_u8(u8 *x, u8 *y) {
 	const auto tmp = *x;
 	*x = *y;
