@@ -9,6 +9,7 @@
 #include <string.h>
 #include <hardware/dma.h>
 #include <hardware/pio.h>
+#include <pico/time.h>
 
 #include "anim.h"
 #include "utils.h"

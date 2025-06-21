@@ -9,6 +9,7 @@
 #include <string.h>
 #include <hardware/dma.h>
 #include <hardware/pio.h>
+#include <pico/time.h>
 
 #include "anim.h"
 #include "utils.h"
@@ -37,7 +38,7 @@ void wsledswhite_init() {
 	sleep_ms(1);
 
 	// get clock divider
-	const auto clk_div = utils_calculate_pio_clk_div_ns(98);
+	const auto clk_div = utils_calculate_pio_clk_div_ns(102);
 	utils_printf("WSLEDS PIO CLK DIV: %f\n", clk_div);
 
 	// init PIO
