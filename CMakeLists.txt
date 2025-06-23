@@ -29,6 +29,8 @@ add_library(pico-shared STATIC
 		shared_modules/wsledswhite/wsledswhite_data.h
 		anim.c
 		anim.h
+		shared_modules/v_monitor/v_monitor.c
+		shared_modules/v_monitor/v_monitor.h
 )
 
 get_target_property(PICO_STD_INCLUDE pico_stdlib INTERFACE_INCLUDE_DIRECTORIES)
