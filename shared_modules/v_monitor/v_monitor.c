@@ -25,14 +25,14 @@ void v_monitor_anim() {
 	static i32 frame = 0;
 	static i32 idx = 0;
 
-	if (frame % TICKS == 1) {
+	if (frame == 0) {
 		samples[idx] = adc_read();
 
 		idx = (idx + 1) % SAMPLE_COUNT;
 		if (sample_count < SAMPLE_COUNT) sample_count++;
 	}
 
-	frame++;
+	frame = (frame + 1) % TICKS;
 }
 
 float v_monitor_voltage(const bool select_input) {
@@ -44,7 +44,7 @@ float v_monitor_voltage(const bool select_input) {
 	float const v_out = raw * ADC_FACTOR;
 	float const v_in = v_out * (MOD_VMON_RES_POS + MOD_VMON_RES_NEG) / MOD_VMON_RES_NEG;
 
-	utils_printf("battery: %5.2f V\r\n", v_in);
+	utils_printf("battery: %5.2f V (sample count: %d)\n", v_in, sample_count);
 
 	return v_in;
 }
