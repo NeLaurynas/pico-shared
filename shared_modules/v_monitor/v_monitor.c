@@ -38,7 +38,7 @@ void v_monitor_anim() {
 float v_monitor_voltage(const bool select_input) {
 	if (select_input) adc_select_input(MOD_VMON_ADC);
 
-	if (sample_count < SAMPLE_COUNT) return -1.f;
+	if (sample_count < SAMPLE_COUNT) return MOD_VMON_DEFAULT_REF;
 
 	float const raw = utils_avg(samples, sample_count);
 	float const v_out = raw * ADC_FACTOR;

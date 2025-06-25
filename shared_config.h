@@ -50,6 +50,7 @@ typedef int8_t i8;
 #define MOD_VMON_VREF		3.3f // Pico uses 3.3 volts for reference
 #define MOD_VMON_ADC_PIN	26
 #define MOD_VMON_ADC		0
+#define MOD_VMON_DEFAULT_REF 9.8f
 
 // MISC
 #define INTERNAL_LED 25
