@@ -6,7 +6,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(PICO_BOARD pico2 CACHE STRING "Board type")
 
-include(pico_sdk_import.cmake)
+include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
+include($ENV{PICO_EXTRAS_PATH}/external/pico_extras_import.cmake)
+message(STATUS "Using pico-extras at: ${PICO_EXTRAS_PATH}")
 
 project(pico-shared C CXX ASM)
 
@@ -31,6 +33,8 @@ add_library(pico-shared STATIC
 		anim.h
 		shared_modules/v_monitor/v_monitor.c
 		shared_modules/v_monitor/v_monitor.h
+		shared_modules/cpu_cores/cpu_cores.c
+		shared_modules/cpu_cores/cpu_cores.h
 )
 
 get_target_property(PICO_STD_INCLUDE pico_stdlib INTERFACE_INCLUDE_DIRECTORIES)
@@ -99,6 +103,9 @@ target_link_libraries(pico-shared
 		hardware_adc
 		hardware_dma
 		hardware_pwm
+		pico_multicore
+		hardware_irq
+		hardware_sleep
 		pico_rand
 		$<$<CONFIG:Debug>:hardware_uart>
 )
