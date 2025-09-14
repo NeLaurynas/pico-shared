@@ -2,6 +2,7 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
+    <mapping directory="$PICO_SDK_PATH$" vcs="Git" />
     <mapping directory="$PICO_SDK_PATH$/lib/btstack" vcs="Git" />
     <mapping directory="$PICO_SDK_PATH$/lib/cyw43-driver" vcs="Git" />
     <mapping directory="$PICO_SDK_PATH$/lib/lwip" vcs="Git" />

@@ -5,6 +5,7 @@
 
 #include "shared_config.h"
 #include "utils.h"
+
 #include "hardware/adc.h"
 #include "hardware/dma.h"
 #include "hardware/i2c.h"
@@ -13,6 +14,7 @@
 #include "hardware/pwm.h"
 #include "hardware/uart.h"
 #include "hardware/xosc.h"
+
 #include "pico/multicore.h"
 
 static void (*shutdown_callback)(void) = nullptr;
@@ -201,6 +203,6 @@ void cpu_cores_shutdown_from_core0() {
 		gpio_set_dir(i, false);
 	}
 
-	utils_printf("going to sleep\n");
+	utils_printf("going to sleep (disabling clock)\n");
 	xosc_disable();
 }

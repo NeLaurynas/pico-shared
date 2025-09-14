@@ -33,6 +33,8 @@ add_library(pico-shared STATIC
 		shared_modules/v_monitor/v_monitor.h
 		shared_modules/cpu_cores/cpu_cores.c
 		shared_modules/cpu_cores/cpu_cores.h
+		shared_modules/memory/memory.c
+		shared_modules/memory/memory.h
 )
 
 get_target_property(PICO_STD_INCLUDE pico_stdlib INTERFACE_INCLUDE_DIRECTORIES)
