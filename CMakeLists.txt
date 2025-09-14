@@ -7,8 +7,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(PICO_BOARD pico2 CACHE STRING "Board type")
 
 include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
-include($ENV{PICO_EXTRAS_PATH}/external/pico_extras_import.cmake)
-message(STATUS "Using pico-extras at: ${PICO_EXTRAS_PATH}")
 
 project(pico-shared C CXX ASM)
 
@@ -105,7 +103,6 @@ target_link_libraries(pico-shared
 		hardware_pwm
 		pico_multicore
 		hardware_irq
-		hardware_sleep
 		pico_rand
 		$<$<CONFIG:Debug>:hardware_uart>
 )

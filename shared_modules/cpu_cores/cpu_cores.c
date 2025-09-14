@@ -12,8 +12,8 @@
 #include "hardware/pio.h"
 #include "hardware/pwm.h"
 #include "hardware/uart.h"
+#include "hardware/xosc.h"
 #include "pico/multicore.h"
-#include "pico/sleep.h"
 
 static void (*shutdown_callback)(void) = nullptr;
 
@@ -202,5 +202,5 @@ void cpu_cores_shutdown_from_core0() {
 	}
 
 	utils_printf("going to sleep\n");
-	sleep_goto_dormant_until_edge_high(1);
+	xosc_disable();
 }
