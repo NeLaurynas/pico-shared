@@ -17,7 +17,7 @@
 
 #include "pico/multicore.h"
 
-static void (*shutdown_callback)(void) = nullptr;
+queue_t mod_cpu_core0_queue;
 
 static inline void pwm_off_all(void) {
 	for (u16 s = 0; s < NUM_PWM_SLICES; s++) pwm_set_enabled(s, false);
@@ -143,33 +143,16 @@ static inline void uart_off_all(void) {
 #endif
 }
 
-static void sio_fifo_irq_handler(void) {
-	while (multicore_fifo_rvalid()) {
-		const u32 cmd = multicore_fifo_pop_blocking();
-		if (cmd == CPU_CORES_CMD_SHUTDOWN) {
-			if (shutdown_callback != NULL) shutdown_callback();
-			else
-				utils_printf("!!! SHUTDOWN_CALLBACK WAS NULL");
-		}
-	}
+void cpu_cores_init_from_core0() {
+	queue_init(&mod_cpu_core0_queue, sizeof(mod_cores_cmd_t), 1);
 
-	multicore_fifo_clear_irq();
-}
-
-void cpu_cores_init_from_core0(void (*callback)(void)) {
-	shutdown_callback = callback;
-
-	multicore_fifo_drain();
-	multicore_fifo_clear_irq();
-
-	irq_set_exclusive_handler(SIO_FIFO_IRQ_NUM(0), sio_fifo_irq_handler);
-	irq_set_enabled(SIO_FIFO_IRQ_NUM(0), true);
 }
 
 [[noreturn]]
 void cpu_cores_send_shutdown_to_core0_from_core1(void) {
-	utils_printf("set shutdown flag for core0 from core 1\n");
-	multicore_fifo_push_blocking(CPU_CORES_CMD_SHUTDOWN);
+	const mod_cores_cmd_t cmd = CPU_CORES_CMD_SHUTDOWN;
+	utils_printf("sending shutdown cmd to core0\n");
+	queue_add_blocking(&mod_cpu_core0_queue, &cmd);
 
 	utils_printf("core1 entering loop to prevent instruction execution; core0 will later shut it down\n");
 	for (;;) tight_loop_contents();

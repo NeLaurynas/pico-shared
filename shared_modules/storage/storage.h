@@ -19,12 +19,19 @@ static_assert((MOD_STORAGE_SECTOR_SIZE % MOD_STORAGE_PAGE_SIZE) == 0, "sector mu
 static_assert((MOD_STORAGE_BYTES % MOD_STORAGE_SECTOR_SIZE) == 0, "reserved bytes must be multiple of sector");
 static_assert(MOD_STORAGE_SECTORS >= 2, "reserve at least 2 sectors to avoid self-erasing latest");
 static_assert((MOD_STORAGE_OFFSET % MOD_STORAGE_SECTOR_SIZE) == 0, "offset must be sector aligned");
-static_assert((MOD_STORAGE_BYTES % MOD_STORAGE_SECTOR_SIZE) == 0,   "size must be sector multiple");
+static_assert((MOD_STORAGE_BYTES % MOD_STORAGE_SECTOR_SIZE) == 0, "size must be sector multiple");
 static_assert(MOD_STORAGE_OFFSET + MOD_STORAGE_BYTES <= PICO_FLASH_SIZE_BYTES, "storage exceeds flash");
 
 /**
  * @warning Use \c memmap_storage.ld.in to reserve flash for storage!
  * @warning if multicore setup - \c flash_safe_execute_core_init() on coreA if calling from coreB.
+ * @details
+configure_file(
+		${PICO_SHARED_COPY_PARENT}/pico-shared/memmap_storage.ld.in
+		${CMAKE_CURRENT_BINARY_DIR}/memmap_storage.ld
+		@ONLY
+)
+pico_set_linker_script(${PROJECT_NAME} ${CMAKE_CURRENT_BINARY_DIR}/memmap_storage.ld)
  * @return \c true if all good; \c false if no records - \b first \b boot?
  */
 [[nodiscard("returns false if no records - first boot")]] bool storage_init();
