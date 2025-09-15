@@ -18,7 +18,7 @@ typedef struct {
 
 static storage_state_t storage_state = { };
 
-#define STORAGE_WRITE_MAX_TRIES		100u
+#define STORAGE_WRITE_MAX_TRIES		25
 #define STORAGE_BASE_XIP			((uintptr_t)(XIP_BASE + (u32)MOD_STORAGE_OFFSET))
 
 // --- helpers from pico examples
@@ -50,7 +50,7 @@ static inline u32 page_advance(const u32 offset) {
 }
 
 static bool page_is_erased(const u8 *flash_location) {
-	for (u32 i = 0; i < 5; i++) if (flash_location[i] != 0xFF) return false; // yea check only first page locations
+	for (auto i = 0; i < 10; i++) if (flash_location[i] != 0xFF) return false; // yea check only first page locations
 	return true;
 }
 
@@ -175,7 +175,7 @@ bool storage_save(const void *data, const u32 len) {
 }
 
 void storage_erase_all() {
-	for (u32 i = 0; i < MOD_STORAGE_SECTORS; i++) {
+	for (auto i = 0; i < MOD_STORAGE_SECTORS; i++) {
 		const u32 sector_offset = sector_start(i);
 		const u32 off = MOD_STORAGE_OFFSET + sector_offset;
 

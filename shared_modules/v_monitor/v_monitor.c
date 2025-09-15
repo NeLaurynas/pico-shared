@@ -29,7 +29,7 @@ void v_monitor_anim() {
 		samples[idx] = adc_read();
 
 		idx = (idx + 1) % SAMPLE_COUNT;
-		if (sample_count < SAMPLE_COUNT) sample_count++;
+		if (unlikely(sample_count < SAMPLE_COUNT)) sample_count++;
 	}
 
 	frame = (frame + 1) % TICKS;
