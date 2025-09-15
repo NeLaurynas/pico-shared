@@ -12,6 +12,10 @@
 
 #include "shared_config.h"
 #include "pico/rand.h"
+#include "shared_modules/memory/memory.h"
+
+static bool crc_init = false;
+static u32 *crc_tab;
 
 u32 utils_random_in_range(u32 fromInclusive, u32 toInclusive) {
 	if (fromInclusive > toInclusive) {
@@ -148,4 +152,34 @@ void utils_print_time_elapsed(const char *title, const u32 start_us) {
 	const auto elapsed = utils_time_diff_us(start_us, end);
 	const float elapsed_ms = (float)elapsed / 1000.0f;
 	utils_printf("'%s' took: %.2f ms (%ld us)\n", title, elapsed_ms, elapsed);
+}
+
+void utils_crc_init() {
+	if (crc_init) return;
+
+	crc_tab = malloc(256 * sizeof *crc_tab);
+	if (crc_tab == nullptr) {
+		utils_printf("!!! Couldn't allocate memory for crc tab (free memory: %u kB)\n", memory_remaining_heap() / 1024);
+		return;
+	}
+
+	for (u32 i = 0; i < 256; i++) {
+		u32 c = i;
+		for (int k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320u ^ (c >> 1)) : (c >> 1);
+		crc_tab[i] = c;
+	}
+
+	crc_init = true;
+}
+
+u32 utils_crc(const void *data, const size_t len) {
+	if (unlikely(!crc_init)) {
+		utils_printf("!!! Call utils_crc_init first!\n");
+		return 0;
+	}
+
+	const u8 *p = data;
+	u32 c = 0xFFFFFFFFu;
+	for (size_t i = 0; i < len; i++) c = crc_tab[(c ^ p[i]) & 0xFFu] ^ (c >> 8);
+	return c ^ 0xFFFFFFFFu;
 }

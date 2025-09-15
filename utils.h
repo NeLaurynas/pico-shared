@@ -14,6 +14,9 @@
 
 #define DMA_IRQ(irq) (irq == 0 ? DMA_IRQ_0 : DMA_IRQ_1)
 
+#define likely(x)   __builtin_expect(!!(x), 1)
+#define unlikely(x) __builtin_expect(!!(x), 0)
+
 static inline u8 utils_min_u8(const u8 x, const u8 y) {
 	return x < y ? x : y;
 }
@@ -208,5 +211,9 @@ i32 utils_scaled_pwm_percentage(i32 val, i32 deadzone, i32 max_val);
 u16 *utils_pwm_cc_for_16bit(u8 slice, u8 channel);
 
 void utils_print_time_elapsed(const char *title, u32 start_us);
+
+void utils_crc_init();
+
+u32 utils_crc(const void *data, size_t len);
 
 #endif //UTILS_H

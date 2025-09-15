@@ -12,6 +12,16 @@ project(pico-shared C CXX ASM)
 
 pico_sdk_init()
 
+# Storage Flash layout. Set how many sectors to reserve; the rest is for code.
+if (NOT DEFINED FLASH_TOTAL_BYTES)
+	set(FLASH_TOTAL_BYTES 4194304 CACHE STRING "Total on-board flash size (bytes)") # Pico 2 flash size - 4 mB
+endif ()
+
+set(MOD_STORAGE_SECTOR_SIZE 4096 CACHE STRING "Flash sector size (bytes)") # Pico 2 sector size - 4 kB
+set(MOD_STORAGE_SECTORS 128 CACHE STRING "Number of sectors to reserve for storage")
+math(EXPR MOD_STORAGE_BYTES "${MOD_STORAGE_SECTORS} * ${MOD_STORAGE_SECTOR_SIZE}")
+math(EXPR APP_FLASH_BYTES "${FLASH_TOTAL_BYTES} - ${MOD_STORAGE_BYTES}")
+
 add_library(pico-shared STATIC
 		utils.c
 		utils.h
@@ -35,6 +45,19 @@ add_library(pico-shared STATIC
 		shared_modules/cpu_cores/cpu_cores.h
 		shared_modules/memory/memory.c
 		shared_modules/memory/memory.h
+		shared_modules/storage/storage.c
+		shared_modules/storage/storage.h
+		str.c
+		str.h
+)
+
+target_compile_definitions(pico-shared PRIVATE
+        PICO_FLASH_SIZE_BYTES=${FLASH_TOTAL_BYTES}
+        MOD_STORAGE_SECTORS=${MOD_STORAGE_SECTORS}
+        MOD_STORAGE_SECTOR_SIZE=${MOD_STORAGE_SECTOR_SIZE}
+        MOD_STORAGE_PAGE_SIZE=256 # Pico 2 page size in bytes
+        MOD_STORAGE_BYTES=${MOD_STORAGE_BYTES}
+        MOD_STORAGE_OFFSET=${APP_FLASH_BYTES}
 )
 
 get_target_property(PICO_STD_INCLUDE pico_stdlib INTERFACE_INCLUDE_DIRECTORIES)
@@ -105,6 +128,14 @@ target_link_libraries(pico-shared
 		hardware_pwm
 		pico_multicore
 		hardware_irq
+		hardware_flash
 		pico_rand
 		$<$<CONFIG:Debug>:hardware_uart>
 )
+
+configure_file(
+		memmap_storage.ld.in
+		${CMAKE_CURRENT_BINARY_DIR}/memmap_storage.ld
+		@ONLY
+)
+pico_set_linker_script(pico-shared ${CMAKE_CURRENT_BINARY_DIR}/memmap_storage.ld)
