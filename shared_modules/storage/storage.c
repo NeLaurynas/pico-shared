@@ -18,7 +18,8 @@ typedef struct {
 
 static storage_state_t storage_state = { };
 
-#define STORAGE_BASE_XIP   ((uintptr_t)(XIP_BASE + (u32)MOD_STORAGE_OFFSET))
+#define STORAGE_WRITE_MAX_TRIES		100u
+#define STORAGE_BASE_XIP			((uintptr_t)(XIP_BASE + (u32)MOD_STORAGE_OFFSET))
 
 // --- helpers from pico examples
 static void call_flash_range_erase(void *param) {
@@ -108,11 +109,12 @@ bool storage_load(void *out, const u32 len) {
 	return true;
 }
 
+// ReSharper disable once CppDFAConstantFunctionResult clion u dum dum
 bool storage_save(const void *data, const u32 len) {
 	if (len > MOD_STORAGE_PAYLOAD_BYTES) return false;
 	const u8 *bytes = (const u8*)data;
 
-	const u32 destination = storage_state.has_records ? page_advance(storage_state.latest_offset) : 0u;
+	u32 destination = storage_state.has_records ? page_advance(storage_state.latest_offset) : 0u;
 
 	u8 page[MOD_STORAGE_PAGE_SIZE];
 	for (u32 i = 0; i < MOD_STORAGE_PAGE_SIZE; i++) page[i] = 0xFF;
@@ -126,36 +128,50 @@ bool storage_save(const void *data, const u32 len) {
 
 	int rc;
 
-	if ((destination % MOD_STORAGE_SECTOR_SIZE) == 0) {
-		utils_printf("erasing sector at offset 0x%08lX (XIP %p)\n",
-		             (unsigned long)(MOD_STORAGE_OFFSET + destination),
-		             (const void*)absolute_flash_location(destination));
-		rc = flash_safe_execute(call_flash_range_erase,
-		                        (void*)(uintptr_t)(MOD_STORAGE_OFFSET + destination),
-		                        UINT32_MAX);
-		if (rc != PICO_OK) {
-			utils_printf("erase failed: %d (if -4 then forgot flash_safe_execute_core_init();\n", rc);
-			return false;
+	for (u32 attempt = 0; attempt < STORAGE_WRITE_MAX_TRIES; attempt++) {
+		if ((destination % MOD_STORAGE_SECTOR_SIZE) == 0) {
+			utils_printf("erasing sector at offset 0x%08lX (XIP %p)\n",
+			             (unsigned long)(MOD_STORAGE_OFFSET + destination),
+			             (const void*)absolute_flash_location(destination));
+			rc = flash_safe_execute(call_flash_range_erase,
+			                        (void*)(uintptr_t)(MOD_STORAGE_OFFSET + destination),
+			                        UINT32_MAX);
+			if (rc != PICO_OK) {
+				utils_printf("erase failed: %d (if -4 then forgot flash_safe_execute_core_init();)\n", rc);
+				destination = page_advance(destination);
+				continue;
+			}
 		}
+
+		utils_printf("writing version %lu attempt %lu to %p\n",
+		             (unsigned long)record->version,
+		             (unsigned long)(attempt + 1u),
+		             (const void*)absolute_flash_location(destination));
+		uintptr_t prog_params[] = { (uintptr_t)(MOD_STORAGE_OFFSET + destination), (uintptr_t)page };
+
+		rc = flash_safe_execute(call_flash_range_program, prog_params, UINT32_MAX);
+		if (rc == PICO_OK) {
+			const settings_record_t *verify = (const settings_record_t*)absolute_flash_location(destination);
+
+			if (record_valid(verify) && verify->version == record->version) {
+				// ReSharper disable once CppDFAUnreachableCode - clion u dum dum
+				storage_state.has_records = true;
+				storage_state.latest_version = record->version;
+				storage_state.latest_offset = destination;
+				return true;
+			}
+
+			utils_printf("verify failed at %p, advancing to next page\n",
+			             (const void*)absolute_flash_location(destination));
+		} else {
+			utils_printf("program failed: %d (if -4 then forgot flash_safe_execute_core_init();)\n", rc);
+		}
+
+		destination = page_advance(destination);
 	}
 
-	utils_printf("writing version %lu to %p\n",
-	             (unsigned long)record->version,
-	             (const void*)absolute_flash_location(destination));
-	uintptr_t prog_params[] = { (uintptr_t)(MOD_STORAGE_OFFSET + destination), (uintptr_t)page };
-	rc = flash_safe_execute(call_flash_range_program, prog_params, UINT32_MAX);
-	if (rc != PICO_OK) {
-		utils_printf("program failed: %d (if -4 then forgot flash_safe_execute_core_init();\n", rc);
-		return false;
-	}
-
-	// TODO: read back and try again with next page (limit try count to 100?)
-
-	storage_state.has_records = true;
-	storage_state.latest_version = record->version;
-	storage_state.latest_offset = destination;
-
-	return true;
+	utils_printf("write failed after %lu attempts\n", (unsigned long)STORAGE_WRITE_MAX_TRIES);
+	return false;
 }
 
 void storage_erase_all() {
@@ -165,10 +181,11 @@ void storage_erase_all() {
 
 		utils_printf("erasing sector %u at 0x%08lX\n", (unsigned)i, (unsigned long)off);
 
-		int rc = flash_safe_execute(call_flash_range_erase, (void*)(uintptr_t)off, UINT32_MAX);
+		const int rc = flash_safe_execute(call_flash_range_erase, (void*)(uintptr_t)off, UINT32_MAX);
 		if (rc != PICO_OK) {
 			utils_printf("erase failed: %d\n", rc);
 		}
 	}
+
 	storage_state = (storage_state_t) { 0 };
 }
