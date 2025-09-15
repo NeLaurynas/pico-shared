@@ -128,6 +128,7 @@ target_link_libraries(pico-shared
 		hardware_pwm
 		pico_multicore
 		hardware_irq
+		pico_flash
 		hardware_flash
 		pico_rand
 		$<$<CONFIG:Debug>:hardware_uart>

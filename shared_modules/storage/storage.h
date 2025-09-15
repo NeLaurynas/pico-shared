@@ -24,6 +24,7 @@ static_assert(MOD_STORAGE_OFFSET + MOD_STORAGE_BYTES <= PICO_FLASH_SIZE_BYTES, "
 
 /**
  * @warning Use \c memmap_storage.ld.in to reserve flash for storage!
+ * @warning if multicore setup - \c flash_safe_execute_core_init() on coreA if calling from coreB.
  * @return \c true if all good; \c false if no records - \b first \b boot?
  */
 [[nodiscard("returns false if no records - first boot")]] bool storage_init();

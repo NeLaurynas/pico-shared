@@ -7,6 +7,7 @@
 
 #include "utils.h"
 #include "hardware/flash.h"
+#include "pico/flash.h"
 #include "pico/multicore.h"
 
 typedef struct {
@@ -18,6 +19,21 @@ typedef struct {
 static storage_state_t storage_state = { };
 
 #define STORAGE_BASE_XIP   ((uintptr_t)(XIP_BASE + (u32)MOD_STORAGE_OFFSET))
+
+// --- helpers from pico examples
+static void call_flash_range_erase(void *param) {
+	const u32 abs_off = (uintptr_t)param;
+	flash_range_erase(abs_off, MOD_STORAGE_SECTOR_SIZE);
+}
+
+static void call_flash_range_program(void *param) {
+	const uintptr_t *p = (uintptr_t*)param;
+	const u32 abs_off = p[0];
+	const u8 *data = (const u8*)p[1];
+	flash_range_program(abs_off, data, MOD_STORAGE_PAGE_SIZE);
+}
+
+// --- /helpers from pico examples
 
 static inline const u8 *absolute_flash_location(const u32 offset) {
 	return (const u8*)(STORAGE_BASE_XIP + (uintptr_t)offset);
@@ -33,12 +49,7 @@ static inline u32 page_advance(const u32 offset) {
 }
 
 static bool page_is_erased(const u8 *flash_location) {
-	for (u32 i = 0; i < 5; i++)
-		if (flash_location[i] != 0xFF) {
-			utils_printf("page_is_erased: %p: false\n", (const void*)flash_location);
-			return false; // yea check only first page locations
-		}
-	utils_printf("page_is_erased: %p: true\n", (const void*)flash_location);
+	for (u32 i = 0; i < 5; i++) if (flash_location[i] != 0xFF) return false; // yea check only first page locations
 	return true;
 }
 
@@ -47,9 +58,7 @@ static bool record_valid(const settings_record_t *record) {
 	tmp.crc32 = 0;
 	const u32 c = utils_crc(&tmp, sizeof tmp);
 
-	const bool result = record->crc32 == c;
-	utils_printf("record valid: %s\n", result ? "true" : "false");
-	return result;
+	return record->crc32 == c;
 }
 
 static void full_rescan() {
@@ -65,7 +74,6 @@ static void full_rescan() {
 		if (!record_valid(record)) continue;
 
 		if (!storage_state.has_records || record->version > storage_state.latest_version) {
-			utils_printf("latest version: %lu\n", (unsigned long)record->version);
 			storage_state.has_records = true;
 			storage_state.latest_version = record->version;
 			storage_state.latest_offset = offset;
@@ -97,7 +105,6 @@ bool storage_load(void *out, const u32 len) {
 	}
 
 	memcpy(bytes, record->payload, len);
-	utils_printf("payload loaded, version: %lu\n", (unsigned long)record->version);
 	return true;
 }
 
@@ -117,21 +124,30 @@ bool storage_save(const void *data, const u32 len) {
 	record->crc32 = 0;
 	record->crc32 = utils_crc(record, sizeof *record);
 
-	multicore_lockout_start_blocking();
+	int rc;
 
 	if ((destination % MOD_STORAGE_SECTOR_SIZE) == 0) {
 		utils_printf("erasing sector at offset 0x%08lX (XIP %p)\n",
 		             (unsigned long)(MOD_STORAGE_OFFSET + destination),
 		             (const void*)absolute_flash_location(destination));
-		flash_range_erase(MOD_STORAGE_OFFSET + destination, MOD_STORAGE_SECTOR_SIZE);
+		rc = flash_safe_execute(call_flash_range_erase,
+		                        (void*)(uintptr_t)(MOD_STORAGE_OFFSET + destination),
+		                        UINT32_MAX);
+		if (rc != PICO_OK) {
+			utils_printf("erase failed: %d (if -4 then forgot flash_safe_execute_core_init();\n", rc);
+			return false;
+		}
 	}
 
 	utils_printf("writing version %lu to %p\n",
 	             (unsigned long)record->version,
 	             (const void*)absolute_flash_location(destination));
-	flash_range_program(MOD_STORAGE_OFFSET + destination, page, MOD_STORAGE_PAGE_SIZE);
-
-	multicore_lockout_end_blocking();
+	uintptr_t prog_params[] = { (uintptr_t)(MOD_STORAGE_OFFSET + destination), (uintptr_t)page };
+	rc = flash_safe_execute(call_flash_range_program, prog_params, UINT32_MAX);
+	if (rc != PICO_OK) {
+		utils_printf("program failed: %d (if -4 then forgot flash_safe_execute_core_init();\n", rc);
+		return false;
+	}
 
 	// TODO: read back and try again with next page (limit try count to 100?)
 
@@ -145,9 +161,14 @@ bool storage_save(const void *data, const u32 len) {
 void storage_erase_all() {
 	for (u32 i = 0; i < MOD_STORAGE_SECTORS; i++) {
 		const u32 sector_offset = sector_start(i);
-		utils_printf("erasing sector %u\n", (unsigned)i);
-		flash_range_erase(MOD_STORAGE_OFFSET + sector_offset, MOD_STORAGE_SECTOR_SIZE);
-	}
+		const u32 off = MOD_STORAGE_OFFSET + sector_offset;
 
+		utils_printf("erasing sector %u at 0x%08lX\n", (unsigned)i, (unsigned long)off);
+
+		int rc = flash_safe_execute(call_flash_range_erase, (void*)(uintptr_t)off, UINT32_MAX);
+		if (rc != PICO_OK) {
+			utils_printf("erase failed: %d\n", rc);
+		}
+	}
 	storage_state = (storage_state_t) { 0 };
 }
