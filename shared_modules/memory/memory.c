@@ -35,7 +35,7 @@ size_t memory_remaining_heap() {
 		} else hi = mid - 1;
 	}
 
-	utils_printf("Free memory: %u kB\n", lo);
+	utils_printf("Free memory: %u kB\n", lo / 1024);
 
 	return lo;
 }

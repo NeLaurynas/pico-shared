@@ -152,7 +152,7 @@ void cpu_cores_init_from_core0() {
 void cpu_cores_send_shutdown_to_core0_from_core1(void) {
 	const mod_cores_cmd_t cmd = CPU_CORES_CMD_SHUTDOWN;
 	utils_printf("sending shutdown cmd to core0\n");
-	queue_add_blocking(&mod_cpu_core0_queue, &cmd);
+	queue_add_blocking(&mod_cpu_core0_queue, &cmd); // this copies, doesn't just passes address
 
 	utils_printf("core1 entering loop to prevent instruction execution; core0 will later shut it down\n");
 	for (;;) tight_loop_contents();
