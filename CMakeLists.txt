@@ -12,18 +12,46 @@ project(pico-shared C CXX ASM)
 
 pico_sdk_init()
 
-# Match base project CPU and section flags so builds stay consistent.
-set(BASE_CPU_FEATURE_FLAGS
-		-mcpu=cortex-m33
-		-mtune=cortex-m33
-		-mfpu=fpv5-sp-d16
-		-mthumb
-)
+# Match the base project flag sets when included as a subdirectory, and
+# provide sensible defaults when building this library standalone.
+if (NOT DEFINED BASE_CPU_FEATURE_FLAGS)
+	set(BASE_CPU_FEATURE_FLAGS
+			-mcpu=cortex-m33
+			-mtune=cortex-m33
+			-mfpu=fpv5-sp-d16
+			-mthumb
+	)
+endif ()
 
-set(BASE_SECTION_FLAGS
-		-ffunction-sections
-		-fdata-sections
-)
+if (NOT DEFINED BASE_SECTION_FLAGS)
+	set(BASE_SECTION_FLAGS
+			-ffunction-sections
+			-fdata-sections
+	)
+endif ()
+
+if (NOT DEFINED BASE_WARNING_FLAGS)
+	set(BASE_WARNING_FLAGS
+			-Wall
+			-Wextra
+			-Winline
+			-Wno-error=old-style-declaration
+	)
+endif ()
+
+if (NOT DEFINED BASE_DEBUG_FLAGS)
+	set(BASE_DEBUG_FLAGS
+			-Og
+			-g3
+	)
+endif ()
+
+if (NOT DEFINED BASE_RELEASE_FLAGS)
+	set(BASE_RELEASE_FLAGS
+			-O1
+			-g0
+	)
+endif ()
 
 # Storage Flash layout. Set how many sectors to reserve; the rest is for code.
 if (NOT DEFINED FLASH_TOTAL_BYTES)
@@ -78,25 +106,9 @@ get_target_property(PICO_STD_INCLUDE pico_stdlib INTERFACE_INCLUDE_DIRECTORIES)
 target_compile_options(pico-shared PRIVATE
 		${BASE_CPU_FEATURE_FLAGS}
 		${BASE_SECTION_FLAGS}
-		$<$<CONFIG:Debug>:
-		-Og # disable if you get <optimized out>
-		-g3
-		-Wall
-		-Wextra
-		-Winline
-		#		-Werror
-		-Wno-error=old-style-declaration
-		>
-		$<$<CONFIG:Release>:
-		-Wall
-		-Wextra
-		-Winline
-		#-Werror
-		-Wno-error=old-style-declaration
-		-O3
-		-s
-		-g0
-		>
+		${BASE_WARNING_FLAGS}
+		$<$<CONFIG:Debug>:${BASE_DEBUG_FLAGS}>
+		$<$<CONFIG:Release>:${BASE_RELEASE_FLAGS}>
 )
 
 target_compile_options(pico-shared PRIVATE
@@ -105,6 +117,7 @@ target_compile_options(pico-shared PRIVATE
 
 target_link_options(pico-shared PRIVATE
 		${BASE_CPU_FEATURE_FLAGS}
+		$<$<CONFIG:Release>:-Wl,--strip-all>
 )
 
 # PIO
