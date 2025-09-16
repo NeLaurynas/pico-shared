@@ -33,7 +33,6 @@ static void call_flash_range_program(void *param) {
 	const u8 *data = (const u8*)p[1];
 	flash_range_program(abs_off, data, MOD_STORAGE_PAGE_SIZE);
 }
-
 // --- /helpers from pico examples
 
 static inline const u8 *absolute_flash_location(const u32 offset) {
@@ -44,13 +43,13 @@ static inline u32 sector_start(const u32 sector_index) {
 	return sector_index * MOD_STORAGE_SECTOR_SIZE;
 }
 
-static inline u32 page_advance(const u32 offset) {
-	const u32 n = offset + MOD_STORAGE_PAGE_SIZE;
-	return (n >= MOD_STORAGE_BYTES) ? 0u : n;
+static inline u32 entry_advance(const u32 offset) {
+	const u32 next = offset + MOD_STORAGE_ENTRY_BYTES;
+	return (next + MOD_STORAGE_ENTRY_BYTES > MOD_STORAGE_BYTES) ? 0u : next;
 }
 
-static bool page_is_erased(const u8 *flash_location) {
-	for (auto i = 0; i < 10; i++) if (flash_location[i] != 0xFF) return false; // yea check only first page locations
+static bool entry_is_erased(const u8 *flash_location) {
+	for (auto i = 0; i < 10; i++) if (flash_location[i] != 0xFF) return false; // quick check of entry header
 	return true;
 }
 
@@ -67,9 +66,9 @@ static void full_rescan() {
 	storage_state.latest_offset = 0;
 	storage_state.latest_version = 0;
 
-	for (u32 offset = 0; offset < MOD_STORAGE_BYTES; offset += MOD_STORAGE_PAGE_SIZE) {
+	for (u32 offset = 0; offset + MOD_STORAGE_ENTRY_BYTES <= MOD_STORAGE_BYTES; offset += MOD_STORAGE_ENTRY_BYTES) {
 		const u8 *flash_location = absolute_flash_location(offset);
-		if (page_is_erased(flash_location)) continue;
+		if (entry_is_erased(flash_location)) continue;
 
 		const settings_record_t *record = (const settings_record_t*)flash_location; // read data as record
 		if (!record_valid(record)) continue;
@@ -114,12 +113,12 @@ bool storage_save(const void *data, const u32 len) {
 	if (len > MOD_STORAGE_PAYLOAD_BYTES) return false;
 	const u8 *bytes = (const u8*)data;
 
-	u32 destination = storage_state.has_records ? page_advance(storage_state.latest_offset) : 0u;
+	u32 destination = storage_state.has_records ? entry_advance(storage_state.latest_offset) : 0u;
 
-	u8 page[MOD_STORAGE_PAGE_SIZE];
-	for (u32 i = 0; i < MOD_STORAGE_PAGE_SIZE; i++) page[i] = 0xFF;
+	u8 entry[MOD_STORAGE_ENTRY_BYTES];
+	memset(entry, 0xFF, sizeof entry);
 
-	settings_record_t *record = (settings_record_t*)page;
+	settings_record_t *record = (settings_record_t*)entry;
 	record->version = storage_state.latest_version + 1u;
 	memcpy(record->payload, bytes, len);
 
@@ -129,27 +128,42 @@ bool storage_save(const void *data, const u32 len) {
 	int rc;
 
 	for (u32 attempt = 0; attempt < STORAGE_WRITE_MAX_TRIES; attempt++) {
-		if ((destination % MOD_STORAGE_SECTOR_SIZE) == 0) {
-			utils_printf("erasing sector at offset 0x%08lX (XIP %p)\n",
-			             (unsigned long)(MOD_STORAGE_OFFSET + destination),
-			             (const void*)absolute_flash_location(destination));
-			rc = flash_safe_execute(call_flash_range_erase,
-			                        (void*)(uintptr_t)(MOD_STORAGE_OFFSET + destination),
-			                        UINT32_MAX);
-			if (rc != PICO_OK) {
-				utils_printf("erase failed: %d (if -4 then forgot flash_safe_execute_core_init();)\n", rc);
-				destination = page_advance(destination);
-				continue;
-			}
-		}
-
 		utils_printf("writing version %lu attempt %lu to %p\n",
 		             (unsigned long)record->version,
 		             (unsigned long)(attempt + 1u),
 		             (const void*)absolute_flash_location(destination));
-		uintptr_t prog_params[] = { (uintptr_t)(MOD_STORAGE_OFFSET + destination), (uintptr_t)page };
 
-		rc = flash_safe_execute(call_flash_range_program, prog_params, UINT32_MAX);
+		u32 erased_sector_offset = MOD_STORAGE_BYTES;
+		bool erase_failed = false;
+		for (u32 page_index = 0; page_index < MOD_STORAGE_ENTRY_PAGES; page_index++) {
+			const u32 page_offset = destination + (page_index * MOD_STORAGE_PAGE_SIZE);
+
+			if ((page_offset % MOD_STORAGE_SECTOR_SIZE) == 0 && erased_sector_offset != page_offset) {
+				utils_printf("erasing sector at offset 0x%08lX (XIP %p)\n",
+				             (unsigned long)(MOD_STORAGE_OFFSET + page_offset),
+				             (const void*)absolute_flash_location(page_offset));
+				rc = flash_safe_execute(call_flash_range_erase,
+				                        (void*)(uintptr_t)(MOD_STORAGE_OFFSET + page_offset),
+				                        UINT32_MAX);
+				if (rc != PICO_OK) {
+					utils_printf("erase failed: %d (if -4 then forgot flash_safe_execute_core_init();)\n", rc);
+					erase_failed = true;
+					break;
+				}
+				erased_sector_offset = page_offset;
+			}
+
+			uintptr_t prog_params[] = {
+				(uintptr_t)(MOD_STORAGE_OFFSET + page_offset),
+				(uintptr_t)(entry + (page_index * MOD_STORAGE_PAGE_SIZE))
+			};
+
+			rc = flash_safe_execute(call_flash_range_program, prog_params, UINT32_MAX);
+			if (rc != PICO_OK) break;
+		}
+
+		if (erase_failed) return false;
+
 		if (rc == PICO_OK) {
 			const settings_record_t *verify = (const settings_record_t*)absolute_flash_location(destination);
 
@@ -161,13 +175,13 @@ bool storage_save(const void *data, const u32 len) {
 				return true;
 			}
 
-			utils_printf("verify failed at %p, advancing to next page\n",
+			utils_printf("verify failed at %p, advancing to next entry\n",
 			             (const void*)absolute_flash_location(destination));
 		} else {
 			utils_printf("program failed: %d (if -4 then forgot flash_safe_execute_core_init();)\n", rc);
 		}
 
-		destination = page_advance(destination);
+		destination = entry_advance(destination);
 	}
 
 	utils_printf("write failed after %lu attempts\n", (unsigned long)STORAGE_WRITE_MAX_TRIES);

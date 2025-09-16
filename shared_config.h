@@ -52,6 +52,9 @@ typedef int8_t i8;
 #define MOD_VMON_ADC		0
 #define MOD_VMON_DEFAULT_REF 9.8f
 
+// STORAGE
+#define MOD_STORAGE_ENTRY_PAGES 2 // this * MOD_STORAGE_PAGE_SIZE - how many pages should entry take
+
 // MISC
 #define INTERNAL_LED 25
 
