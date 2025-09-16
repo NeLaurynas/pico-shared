@@ -12,6 +12,19 @@ project(pico-shared C CXX ASM)
 
 pico_sdk_init()
 
+# Match base project CPU and section flags so builds stay consistent.
+set(BASE_CPU_FEATURE_FLAGS
+		-mcpu=cortex-m33
+		-mtune=cortex-m33
+		-mfpu=fpv5-sp-d16
+		-mthumb
+)
+
+set(BASE_SECTION_FLAGS
+		-ffunction-sections
+		-fdata-sections
+)
+
 # Storage Flash layout. Set how many sectors to reserve; the rest is for code.
 if (NOT DEFINED FLASH_TOTAL_BYTES)
 	set(FLASH_TOTAL_BYTES 4194304 CACHE STRING "Total on-board flash size (bytes)") # Pico 2 flash size - 4 mB
@@ -63,6 +76,8 @@ target_compile_definitions(pico-shared PRIVATE
 get_target_property(PICO_STD_INCLUDE pico_stdlib INTERFACE_INCLUDE_DIRECTORIES)
 
 target_compile_options(pico-shared PRIVATE
+		${BASE_CPU_FEATURE_FLAGS}
+		${BASE_SECTION_FLAGS}
 		$<$<CONFIG:Debug>:
 		-Og # disable if you get <optimized out>
 		-g3
@@ -71,14 +86,7 @@ target_compile_options(pico-shared PRIVATE
 		-Winline
 		#		-Werror
 		-Wno-error=old-style-declaration
-		-mcpu=cortex-m33
-		-mtune=cortex-m33
-		-mfpu=fpv5-sp-d16
-		-mthumb
-		-ffunction-sections
-		-fdata-sections
 		>
-
 		$<$<CONFIG:Release>:
 		-Wall
 		-Wextra
@@ -88,12 +96,6 @@ target_compile_options(pico-shared PRIVATE
 		-O3
 		-s
 		-g0
-		-mcpu=cortex-m33
-		-mtune=cortex-m33
-		-mfpu=fpv5-sp-d16
-		-mthumb
-		-ffunction-sections
-		-fdata-sections
 		>
 )
 
@@ -102,10 +104,7 @@ target_compile_options(pico-shared PRIVATE
 )
 
 target_link_options(pico-shared PRIVATE
-		-mcpu=cortex-m33
-		-mtune=cortex-m33
-		-mfpu=fpv5-sp-d16
-		-mthumb
+		${BASE_CPU_FEATURE_FLAGS}
 )
 
 # PIO
