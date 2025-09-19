@@ -7,15 +7,16 @@
 #include "shared_config.h"
 
 #define MOD_STORAGE_ENTRY_BYTES      (MOD_STORAGE_PAGE_SIZE * MOD_STORAGE_ENTRY_PAGES)
-#define MOD_STORAGE_PAYLOAD_BYTES    (MOD_STORAGE_ENTRY_BYTES - 8u) // version(4) + crc32(4)
+#define MOD_STORAGE_PAYLOAD_BYTES    (MOD_STORAGE_ENTRY_BYTES - 12u) // version(4) + crc32(4) + type(4)
 
 typedef struct __attribute__((packed)) {
+	char type[4];
 	u32 version;
 	u32 crc32;
 	u8 payload[MOD_STORAGE_PAYLOAD_BYTES];
-} settings_record_t;
+} storage_record_t;
 
-static_assert(sizeof(settings_record_t) == MOD_STORAGE_ENTRY_BYTES, "record size mismatch");
+static_assert(sizeof(storage_record_t) == MOD_STORAGE_ENTRY_BYTES, "record size mismatch");
 static_assert((MOD_STORAGE_SECTOR_SIZE % MOD_STORAGE_PAGE_SIZE) == 0, "sector must be multiple of page");
 static_assert((MOD_STORAGE_BYTES % MOD_STORAGE_SECTOR_SIZE) == 0, "reserved bytes must be multiple of sector");
 static_assert(MOD_STORAGE_SECTORS >= 2, "reserve at least 2 sectors to avoid self-erasing latest");
@@ -35,13 +36,15 @@ configure_file(
 		@ONLY
 )
 pico_set_linker_script(${PROJECT_NAME} ${CMAKE_CURRENT_BINARY_DIR}/memmap_storage.ld)
- * @return \c true if all good; \c false if no records - \b first \b boot?
+ * @param out \c true if all good; \c false if no records - \b first \b boot?
  */
-[[nodiscard("returns false if no records - first boot")]] bool storage_init();
+void storage_init(bool out[MOD_STORAGE_DATA_TYPES]);
 
-[[nodiscard]] bool storage_load(void *out, u32 len);
+void storage_register_data_type(u8 index, const char identifier[4]);
 
-[[nodiscard]] bool storage_save(const void *data, u32 len);
+[[nodiscard]] bool storage_load(u8 index, void *out, u32 len);
+
+[[nodiscard]] bool storage_save(u8 index, const void *data, u32 len);
 
 void storage_erase_all();
 

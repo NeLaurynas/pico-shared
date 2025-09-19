@@ -54,6 +54,7 @@ typedef int8_t i8;
 
 // STORAGE
 #define MOD_STORAGE_ENTRY_PAGES 2 // this * MOD_STORAGE_PAGE_SIZE - how many pages should entry take
+#define MOD_STORAGE_DATA_TYPES	2 // how many different datatypes will be stored
 
 // MISC
 #define INTERNAL_LED 25
