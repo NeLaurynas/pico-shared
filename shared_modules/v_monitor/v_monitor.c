@@ -21,7 +21,7 @@ void v_monitor_init() {
 }
 
 void v_monitor_anim() {
-	static constexpr i32 TICKS = 10; // every 100 or 200 ms
+	static constexpr i32 TICKS = 20; // every 100 or 200 ms
 	static i32 frame = 0;
 	static i32 idx = 0;
 
