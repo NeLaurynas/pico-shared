@@ -183,3 +183,17 @@ u32 utils_crc(const void *data, const size_t len) {
 	for (size_t i = 0; i < len; i++) c = crc_tab[(c ^ p[i]) & 0xFFu] ^ (c >> 8);
 	return c ^ 0xFFFFFFFFu;
 }
+
+void utils_generate_id(char *dst, const size_t len) {
+	static constexpr char SYMBOLS[] =
+		"1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.~_-";
+	static constexpr size_t SYMBOLS_LEN = sizeof SYMBOLS - 1;
+
+	if (dst == nullptr || len == 0) return;
+
+	for (size_t i = 0; i < len; ++i) {
+		const auto idx = utils_random_in_range(0, SYMBOLS_LEN - 1);
+		dst[i] = SYMBOLS[idx];
+	}
+	utils_printf("len=%zu, id=%.*s\n", len, (int)len, dst);
+}

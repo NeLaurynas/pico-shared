@@ -111,7 +111,7 @@ static float utils_avg_base(const void *array, const size_t array_size, const ar
 	int chunk_count = 0;
 
 	size_t idx = 0;
-	for (auto i = 0; i < full_chunks; i++) {
+	for (size_t i = 0; i < full_chunks; i++) {
 		u32 chunk_sum = 0;
 		for (size_t y = 0; y < UTILS_AVG_CHUNK_SIZE; y++) chunk_sum += reader(array, idx++);
 
@@ -164,12 +164,45 @@ static inline float utils_avg_i32(const i32 *array, const size_t array_size) {
 	return utils_avg_base(array, array_size, reader_i32);
 }
 
+static inline float utils_avg_float(const float *array, const size_t array_size) {
+	if (!array || array_size == 0 || UTILS_AVG_CHUNK_SIZE == 0) return 0.0f;
+
+	const size_t full_chunks = array_size / UTILS_AVG_CHUNK_SIZE;
+	const size_t remainder = array_size % UTILS_AVG_CHUNK_SIZE;
+
+	float chunk_averages_sum = 0.0f;
+	int chunk_count = 0;
+
+	size_t idx = 0;
+	for (size_t i = 0; i < full_chunks; i++) {
+		float chunk_sum = 0;
+		for (size_t y = 0; y < UTILS_AVG_CHUNK_SIZE; y++) chunk_sum += array[idx++];
+
+		const float chunk_avg = chunk_sum / (float)UTILS_AVG_CHUNK_SIZE;
+		chunk_averages_sum += chunk_avg;
+		chunk_count++;
+	}
+
+	if (remainder > 0) {
+		float chunk_sum = 0;
+		for (size_t i = 0; i < remainder; i++) chunk_sum += array[idx++];
+
+		const float chunk_avg = chunk_sum / (float)remainder;
+		chunk_averages_sum += chunk_avg;
+		chunk_count++;
+	}
+
+	return chunk_averages_sum / (float)chunk_count;
+}
+
+
 #define utils_avg(array, array_size) \
  _Generic((array), \
 u8*  : utils_avg_u8,  \
 u16*: utils_avg_u16, \
 u32*: utils_avg_u32, \
-i32*: utils_avg_i32  \
+i32*: utils_avg_i32,  \
+float*: utils_avg_float  \
 )(array, array_size)
 
 u32 utils_random_in_range(u32 fromInclusive, u32 toInclusive);
@@ -215,5 +248,7 @@ void utils_print_time_elapsed(const char *title, u32 start_us);
 void utils_crc_init();
 
 u32 utils_crc(const void *data, size_t len);
+
+void utils_generate_id(char *dst, size_t len);
 
 #endif //UTILS_H
