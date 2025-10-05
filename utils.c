@@ -12,6 +12,7 @@
 
 #include "shared_config.h"
 #include "pico/rand.h"
+#include "pico/status_led.h"
 #include "shared_modules/memory/memory.h"
 
 static bool crc_init = false;
@@ -91,6 +92,10 @@ inline u32 utils_time_diff_us(const u32 start_us, const u32 end_us) {
 	return end_us - start_us;
 }
 
+inline i32 utils_time_after_us(const u32 time, const u32 target_time) {
+	return (i32)(target_time - time);
+}
+
 void utils_error_mode(const i32 code) {
 	utils_internal_led(false);
 	const i32 long_blink = code / 10;
@@ -116,8 +121,7 @@ void utils_error_mode(const i32 code) {
 }
 
 void utils_internal_led(const bool on) {
-	if (INTERNAL_LED == 0) return; // don't touch wifi led...
-	gpio_put(INTERNAL_LED, on);
+	status_led_set_state(on);
 }
 
 i32 utils_proportional_reduce(const i32 number, i32 step, const i32 total_steps, const bool invert) {

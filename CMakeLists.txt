@@ -125,7 +125,8 @@ pico_generate_pio_header(pico-shared ${CMAKE_CURRENT_LIST_DIR}/shared_modules/ws
 pico_generate_pio_header(pico-shared ${CMAKE_CURRENT_LIST_DIR}/shared_modules/wsledswhite/pio_wsledswhite.pio)
 
 target_link_libraries(pico-shared
-		pico_stdlib)
+		pico_stdlib
+		pico_status_led)
 
 # Add the standard include files to the build
 target_include_directories(pico-shared PRIVATE

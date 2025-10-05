@@ -233,8 +233,16 @@ u32 utils_time_diff_ms(u32 start_us, u32 end_us);
 
 u32 utils_time_diff_us(u32 start_us, u32 end_us);
 
+/**
+ * @return How many us has passed after \b time (negative if \b target_time is still before \b time)
+ */
+i32 utils_time_after_us(u32 time, u32 target_time);
+
 void utils_error_mode(i32 code);
 
+/**
+ * @attention Call \c status_led_init(); before use
+ */
 void utils_internal_led(bool on);
 
 i32 utils_proportional_reduce(i32 number, i32 step, i32 total_steps, bool invert);

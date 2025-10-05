@@ -12,6 +12,13 @@ typedef uint8_t u8;
 typedef int32_t i32;
 typedef int16_t i16;
 typedef int8_t i8;
+typedef int64_t i64;
+typedef uint64_t u64;
+#define US_IN_MS      1000ULL
+#define US_IN_SECOND  (1000ULL * US_IN_MS)
+#define US_IN_MINUTE  (60ULL * US_IN_SECOND)
+#define US_IN_HOUR    (60ULL * US_IN_MINUTE)
+
 
 #define DBG true
 
@@ -55,8 +62,5 @@ typedef int8_t i8;
 // STORAGE
 #define MOD_STORAGE_ENTRY_PAGES 2 // this * MOD_STORAGE_PAGE_SIZE - how many pages should entry take
 #define MOD_STORAGE_DATA_TYPES	2 // how many different datatypes will be stored
-
-// MISC
-#define INTERNAL_LED 25
 
 #endif //SHARED_CONFIG_H
