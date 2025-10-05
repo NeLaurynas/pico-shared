@@ -33,12 +33,17 @@ static inline i32 utils_min_i32(const i32 x, const i32 y) {
 	return x < y ? x : y;
 }
 
+static inline size_t utils_min_size_t(const size_t x, const size_t y) {
+	return x < y ? x : y;
+}
+
 #define utils_min(x, y) \
 _Generic((x), \
 u8: utils_min_u8, \
 u16: utils_min_u16, \
 u32: utils_min_u32, \
-i32: utils_min_i32 \
+i32: utils_min_i32, \
+size_t: utils_min_size_t \
 )(x, y)
 
 static inline u8 utils_max_u8(const u8 x, const u8 y) {
