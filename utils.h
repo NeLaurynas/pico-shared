@@ -242,6 +242,7 @@ void utils_error_mode(i32 code);
 
 /**
  * @attention Call \c status_led_init(); before use
+ * @warning Unless you init cyw43 arch manually and in poll or w/e. It's fucky.
  */
 void utils_internal_led(bool on);
 

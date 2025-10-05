@@ -4,13 +4,17 @@ set(CMAKE_C_STANDARD 23)
 set(CMAKE_C_EXTENSIONS ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(PICO_BOARD pico2 CACHE STRING "Board type")
-
-include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
+# Standalone support: when configured directly, import the Pico SDK first so
+# the GCC ARM toolchain and flags are set before project() runs.
+if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
+endif ()
 
 project(pico-shared C CXX ASM)
 
-pico_sdk_init()
+if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    pico_sdk_init()
+endif ()
 
 # Match the base project flag sets when included as a subdirectory, and
 # provide sensible defaults when building this library standalone.
@@ -53,13 +57,16 @@ if (NOT DEFINED BASE_RELEASE_FLAGS)
 	)
 endif ()
 
-# Storage Flash layout. Set how many sectors to reserve; the rest is for code.
+# Storage Flash layout. Inherit from parent; provide sane defaults only if missing.
 if (NOT DEFINED FLASH_TOTAL_BYTES)
-	set(FLASH_TOTAL_BYTES 4194304 CACHE STRING "Total on-board flash size (bytes)") # Pico 2 flash size - 4 mB
+    set(FLASH_TOTAL_BYTES 4194304 CACHE STRING "Total on-board flash size (bytes)") # Pico 2 flash size - 4 mB
 endif ()
-
-set(MOD_STORAGE_SECTOR_SIZE 4096 CACHE STRING "Flash sector size (bytes)") # Pico 2 sector size - 4 kB
-set(MOD_STORAGE_SECTORS 128 CACHE STRING "Number of sectors to reserve for storage")
+if (NOT DEFINED MOD_STORAGE_SECTOR_SIZE)
+    set(MOD_STORAGE_SECTOR_SIZE 4096 CACHE STRING "Flash sector size (bytes)") # Pico 2 sector size - 4 kB
+endif ()
+if (NOT DEFINED MOD_STORAGE_SECTORS)
+    set(MOD_STORAGE_SECTORS 128 CACHE STRING "Number of sectors to reserve for storage")
+endif ()
 math(EXPR MOD_STORAGE_BYTES "${MOD_STORAGE_SECTORS} * ${MOD_STORAGE_SECTOR_SIZE}")
 math(EXPR APP_FLASH_BYTES "${FLASH_TOTAL_BYTES} - ${MOD_STORAGE_BYTES}")
 
@@ -92,6 +99,7 @@ add_library(pico-shared STATIC
 		str.h
 )
 
+# Ensure the storage layout macros match the parent's configuration.
 target_compile_definitions(pico-shared PRIVATE
         PICO_FLASH_SIZE_BYTES=${FLASH_TOTAL_BYTES}
         MOD_STORAGE_SECTORS=${MOD_STORAGE_SECTORS}
@@ -147,9 +155,12 @@ target_link_libraries(pico-shared
 		$<$<CONFIG:Debug>:hardware_uart>
 )
 
-configure_file(
-		memmap_storage.ld.in
-		${CMAKE_CURRENT_BINARY_DIR}/memmap_storage.ld
-		@ONLY
-)
-pico_set_linker_script(pico-shared ${CMAKE_CURRENT_BINARY_DIR}/memmap_storage.ld)
+# Only generate and apply a linker script when this library is built standalone.
+if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    configure_file(
+            memmap_storage.ld.in
+            ${CMAKE_CURRENT_BINARY_DIR}/memmap_storage.ld
+            @ONLY
+    )
+    pico_set_linker_script(pico-shared ${CMAKE_CURRENT_BINARY_DIR}/memmap_storage.ld)
+endif ()
