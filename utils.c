@@ -96,7 +96,7 @@ inline i32 utils_time_after_us(const u32 time, const u32 target_time) {
 	return (i32)(target_time - time);
 }
 
-void utils_error_mode(const i32 code) {
+[[noreturn]] void utils_error_mode(const i32 code) {
 	utils_internal_led(false);
 	const i32 long_blink = code / 10;
 	const i32 short_blink = code % 10;

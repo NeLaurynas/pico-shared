@@ -243,7 +243,7 @@ u32 utils_time_diff_us(u32 start_us, u32 end_us);
  */
 i32 utils_time_after_us(u32 time, u32 target_time);
 
-void utils_error_mode(i32 code);
+[[noreturn]] void utils_error_mode(const i32 code);
 
 /**
  * @attention Call \c status_led_init(); before use

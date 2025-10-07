@@ -34,7 +34,7 @@ void cpu_cores_init_from_core0();
 /**
  * @brief Notifies core0 to quit loop or w/e and proceed to shutdown (call \c cpu_cores_shutdown_from_core0(); )
  */
-void cpu_cores_send_shutdown_to_core0_from_core1();
+[[noreturn]] void cpu_cores_send_shutdown_to_core0_from_core1();
 
 /**
 *	@warning Don't forget to turn off BT and WiFi stack before calling this (pico-shared doesn't include btstack, etc)
