@@ -3,7 +3,7 @@
 
 #ifndef PICO_SHARED_CPU_CORES_H
 #define PICO_SHARED_CPU_CORES_H
-#include "pico/util/queue.h"
+#include <pico/util/queue.h>
 
 typedef enum {
 	CPU_CORES_CMD_NOOP = 0, CPU_CORES_CMD_SHUTDOWN = 1369420

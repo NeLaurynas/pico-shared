@@ -40,11 +40,11 @@ pico_set_linker_script(${PROJECT_NAME} ${CMAKE_CURRENT_BINARY_DIR}/memmap_storag
  */
 void storage_init(bool out[MOD_STORAGE_DATA_TYPES]);
 
-void storage_register_data_type(u8 index, const char identifier[4]);
+void storage_register_data_type(const u8 index, const char identifier[4]);
 
-[[nodiscard]] bool storage_load(u8 index, void *out, u32 len);
+[[nodiscard]] bool storage_load(const u8 index, void *out, const u32 len);
 
-[[nodiscard]] bool storage_save(u8 index, const void *data, u32 len);
+[[nodiscard]] bool storage_save(const u8 index, const void *data, const u32 len);
 
 void storage_erase_all();
 

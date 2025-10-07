@@ -6,6 +6,6 @@
 
 #include <stddef.h>
 
-void str_set(char dest[], size_t cap, const char *src);
+void str_set(char dest[], const size_t cap, const char *src);
 
 #endif //PICO_SHARED_STR_H

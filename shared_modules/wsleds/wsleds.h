@@ -11,6 +11,6 @@ void wsleds_init();
 
 void wsleds_buffer_transfer();
 
-void wsleds_rotate_buffer_left(u8 times);
+void wsleds_rotate_buffer_left(const u8 times);
 
 #endif //WSLEDS_H

@@ -8,6 +8,6 @@ void v_monitor_init();
 
 void v_monitor_anim();
 
-float v_monitor_voltage(bool select_input);
+float v_monitor_voltage(const bool select_input);
 
 #endif //V_MONITOR_H

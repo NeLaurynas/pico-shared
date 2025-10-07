@@ -70,25 +70,25 @@ u32: utils_max_u32, \
 i32: utils_max_i32 \
 )(x, y)
 
-static void utils_swap_u8(u8 *x, u8 *y) {
+static inline void utils_swap_u8(u8 *x, u8 *y) {
 	const auto tmp = *x;
 	*x = *y;
 	*y = tmp;
 }
 
-static void utils_swap_u16(u16 *x, u16 *y) {
+static inline void utils_swap_u16(u16 *x, u16 *y) {
 	const auto tmp = *x;
 	*x = *y;
 	*y = tmp;
 }
 
-static void utils_swap_u32(u32 *x, u32 *y) {
+static inline void utils_swap_u32(u32 *x, u32 *y) {
 	const auto tmp = *x;
 	*x = *y;
 	*y = tmp;
 }
 
-static void utils_swap_i32(i32 *x, i32 *y) {
+static inline void utils_swap_i32(i32 *x, i32 *y) {
 	const auto tmp = *x;
 	*x = *y;
 	*y = tmp;
@@ -106,7 +106,7 @@ i32*: utils_swap_i32 \
 
 typedef u32 (*array_elem_reader_t)(const void *, size_t);
 
-static float utils_avg_base(const void *array, const size_t array_size, const array_elem_reader_t reader) {
+static inline float utils_avg_base(const void *array, const size_t array_size, const array_elem_reader_t reader) {
 	if (!array || array_size == 0 || UTILS_AVG_CHUNK_SIZE == 0) return 0.0f;
 
 	const size_t full_chunks = array_size / UTILS_AVG_CHUNK_SIZE;
@@ -137,19 +137,19 @@ static float utils_avg_base(const void *array, const size_t array_size, const ar
 	return chunk_averages_sum / (float)chunk_count;
 }
 
-static u32 reader_u8(const void *array, const size_t index) {
+static inline u32 reader_u8(const void *array, const size_t index) {
 	return ((const u8*)array)[index];
 }
 
-static u32 reader_u16(const void *array, const size_t index) {
+static inline u32 reader_u16(const void *array, const size_t index) {
 	return ((const u16*)array)[index];
 }
 
-static u32 reader_u32(const void *array, const size_t index) {
+static inline u32 reader_u32(const void *array, const size_t index) {
 	return ((const u32*)array)[index];
 }
 
-static u32 reader_i32(const void *array, const size_t index) {
+static inline u32 reader_i32(const void *array, const size_t index) {
 	return ((const i32*)array)[index];
 }
 
@@ -216,9 +216,9 @@ float utils_print_onboard_temp();
 
 void utils_print_cpu_speed();
 
-float utils_calculate_pio_clk_div(float instruction_execution_in_us);
+float utils_calculate_pio_clk_div(const float instruction_execution_in_us);
 
-float utils_calculate_pio_clk_div_ns(float instruction_execution_in_ns);
+float utils_calculate_pio_clk_div_ns(const float instruction_execution_in_ns);
 
 /**
  * Calculates PWM clock. 1 khz = every 1 ms, 2 khz = ever 0.5 ms, etc
@@ -226,7 +226,7 @@ float utils_calculate_pio_clk_div_ns(float instruction_execution_in_ns);
  * @param top PWM TOP configuration (wrap)
  * @param freq_khz Desired frequency (check debug messages if clock can be generated)
  */
-float utils_calculate_pwm_divider(u32 top, float freq_khz);
+float utils_calculate_pwm_divider(const u32 top, const float freq_khz);
 
 #if defined(DBG) && DBG
 #define utils_printf(...) printf(__VA_ARGS__)
@@ -234,14 +234,14 @@ float utils_calculate_pwm_divider(u32 top, float freq_khz);
 #define utils_printf(...) (void)0
 #endif
 
-u32 utils_time_diff_ms(u32 start_us, u32 end_us);
+u32 utils_time_diff_ms(const u32 start_us, const u32 end_us);
 
-u32 utils_time_diff_us(u32 start_us, u32 end_us);
+u32 utils_time_diff_us(const u32 start_us, const u32 end_us);
 
 /**
  * @return How many us has passed after \b time (negative if \b target_time is still before \b time)
  */
-i32 utils_time_after_us(u32 time, u32 target_time);
+i32 utils_time_after_us(const u32 time, const u32 target_time);
 
 [[noreturn]] void utils_error_mode(const i32 code);
 
@@ -249,20 +249,20 @@ i32 utils_time_after_us(u32 time, u32 target_time);
  * @attention Call \c status_led_init(); before use
  * @warning Unless you init cyw43 arch manually and in poll or w/e. It's fucky.
  */
-void utils_internal_led(bool on);
+void utils_internal_led(const bool on);
 
-i32 utils_proportional_reduce(i32 number, i32 step, i32 total_steps, bool invert);
+i32 utils_proportional_reduce(const i32 number, i32 step, const i32 total_steps, const bool invert);
 
-i32 utils_scaled_pwm_percentage(i32 val, i32 deadzone, i32 max_val);
+i32 utils_scaled_pwm_percentage(const i32 val, const i32 deadzone, const i32 max_val);
 
-u16 *utils_pwm_cc_for_16bit(u8 slice, u8 channel);
+u16 *utils_pwm_cc_for_16bit(const u8 slice, const u8 channel);
 
-void utils_print_time_elapsed(const char *title, u32 start_us);
+void utils_print_time_elapsed(const char *title, const u32 start_us);
 
 void utils_crc_init();
 
-u32 utils_crc(const void *data, size_t len);
+u32 utils_crc(const void *data, const size_t len);
 
-void utils_generate_id(char *dst, size_t len);
+void utils_generate_id(char *dst, const size_t len);
 
 #endif //UTILS_H

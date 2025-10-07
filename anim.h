@@ -16,7 +16,7 @@ typedef enum {
  * @param speed  How fast animation will go to an end (will hold)
  * @param freq How many times in frame_ticks it will get repeated
  */
-u8 anim_color_reduction(anim_direction_t direction, u16 frame, u16 frame_count, float speed, float freq);
+u8 anim_color_reduction(const anim_direction_t direction, const u16 frame, const u16 frame_count, const float speed, const float freq);
 // TODO: maybe return color (like below, because it's always used with reduce_brightness from wsleds.c)
 
 /**
@@ -25,8 +25,8 @@ u8 anim_color_reduction(anim_direction_t direction, u16 frame, u16 frame_count, 
  * @param speed  How fast animation will go to an end (will hold)
  * @param freq How many times in frame_ticks it will get repeated
  */
-u32 anim_color_blend(u32 color_from, u32 color_to, u16 frame, u16 frame_count, float speed, float freq);
+u32 anim_color_blend(const u32 color_from, const u32 color_to, const u16 frame, const u16 frame_count, const float speed, const float freq);
 
-u32 anim_reduce_brightness(u32 reduction, u32 color);
+u32 anim_reduce_brightness(const u32 reduction, const u32 color);
 
 #endif //ANIM_H

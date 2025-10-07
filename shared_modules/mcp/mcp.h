@@ -8,12 +8,12 @@
 
 void mcp_init();
 
-void mcp_cfg_set_pin_out_mode(u8 data, bool is_out);
+void mcp_cfg_set_pin_out_mode(const u8 data, const bool is_out);
 
 void mcp_cfg_set_pull_up(u8 pinData, bool pull_up);
 
-void mcp_set_out(u8 pinData, bool out);
+void mcp_set_out(const u8 pinData, const bool out);
 
-bool mcp_is_pin_low(u8 pinData);
+bool mcp_is_pin_low(const u8 pinData);
 
 #endif //MPC_H
