@@ -102,7 +102,7 @@ inline i32 utils_time_after_us(const u32 time, const u32 target_time) {
 	const i32 short_blink = code % 10;
 	// ReSharper disable once CppDFAEndlessLoop
 	for (;;) {
-		utils_printf("!!! ERROR MODE: %d\n", code);
+		utils_printf("!!! ERROR MODE: %ld\n", code);
 		for (auto i = 0; i < long_blink; i++) {
 			utils_internal_led(true);
 			sleep_ms(500);
