@@ -3,12 +3,12 @@
 
 #include "storage.h"
 
+#include <hardware/flash.h>
+#include <pico/flash.h>
+#include <pico/multicore.h>
 #include <string.h>
 
 #include "utils.h"
-#include "hardware/flash.h"
-#include "pico/flash.h"
-#include "pico/multicore.h"
 
 typedef struct {
 	char type[4];

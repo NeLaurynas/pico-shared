@@ -3,16 +3,16 @@
 
 #include "utils.h"
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <hardware/adc.h>
 #include <hardware/clocks.h>
 #include <hardware/pwm.h>
+#include <pico/rand.h>
+#include <pico/status_led.h>
 #include <pico/time.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "shared_config.h"
-#include "pico/rand.h"
-#include "pico/status_led.h"
 #include "shared_modules/memory/memory.h"
 
 static bool crc_init = false;

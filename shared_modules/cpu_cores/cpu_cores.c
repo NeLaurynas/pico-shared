@@ -3,19 +3,18 @@
 
 #include "cpu_cores.h"
 
+#include <hardware/adc.h>
+#include <hardware/dma.h>
+#include <hardware/i2c.h>
+#include <hardware/irq.h>
+#include <hardware/pio.h>
+#include <hardware/pwm.h>
+#include <hardware/uart.h>
+#include <hardware/xosc.h>
+#include <pico/multicore.h>
+
 #include "shared_config.h"
 #include "utils.h"
-
-#include "hardware/adc.h"
-#include "hardware/dma.h"
-#include "hardware/i2c.h"
-#include "hardware/irq.h"
-#include "hardware/pio.h"
-#include "hardware/pwm.h"
-#include "hardware/uart.h"
-#include "hardware/xosc.h"
-
-#include "pico/multicore.h"
 
 queue_t mod_cpu_core0_queue;
 
