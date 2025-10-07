@@ -4,9 +4,8 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include <stdint.h>
-#include <stdio.h>
 #include <hardware/pwm.h>
+#include <stdio.h>
 
 #include "shared_config.h"
 

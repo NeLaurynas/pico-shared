@@ -6,8 +6,8 @@
 #include <hardware/dma.h>
 #include <hardware/pio.h>
 #include <math.h>
-#include <pio_wsleds.pio.h>
 #include <pico/time.h>
+#include <pio_wsleds.pio.h>
 #include <stdlib.h>
 #include <string.h>
 
