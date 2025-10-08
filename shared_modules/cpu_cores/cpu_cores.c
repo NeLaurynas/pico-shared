@@ -12,9 +12,9 @@
 #include <hardware/uart.h>
 #include <hardware/xosc.h>
 #include <pico/multicore.h>
-#include <utils.h>
 
 #include "shared_config.h"
+#include "utils.h"
 
 queue_t mod_cpu_core0_queue;
 

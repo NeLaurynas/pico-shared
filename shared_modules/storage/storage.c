@@ -7,7 +7,8 @@
 #include <pico/flash.h>
 #include <pico/multicore.h>
 #include <string.h>
-#include <utils.h>
+
+#include "utils.h"
 
 typedef struct {
 	char type[4];
