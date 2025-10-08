@@ -4,9 +4,9 @@
 #include "v_monitor.h"
 
 #include <hardware/adc.h>
+#include <utils.h>
 
 #include "shared_config.h"
-#include "utils.h"
 
 #define SAMPLE_COUNT 25
 #define ADC_FACTOR (MOD_VMON_VREF / (1 << 12))

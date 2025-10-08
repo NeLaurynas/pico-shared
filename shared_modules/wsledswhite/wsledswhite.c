@@ -3,6 +3,7 @@
 
 #include "wsledswhite.h"
 
+#include <anim.h>
 #include <hardware/dma.h>
 #include <hardware/pio.h>
 #include <math.h>
@@ -10,9 +11,8 @@
 #include <pio_wsledswhite.pio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <utils.h>
 
-#include "anim.h"
-#include "utils.h"
 #include "wsledswhite_data.h"
 
 // for square

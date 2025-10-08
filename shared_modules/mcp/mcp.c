@@ -5,9 +5,9 @@
 
 #include <hardware/gpio.h>
 #include <hardware/i2c.h>
+#include <utils.h>
 
 #include "shared_config.h"
-#include "utils.h"
 
 // MCP23017 registers (Bank Mode 1)
 #define C_IODIRA	0x00 // I/O Direction Register A
