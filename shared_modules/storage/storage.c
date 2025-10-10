@@ -102,10 +102,10 @@ static void full_rescan() {
 
 		storage_type_state_t *state = &storage_state.types[type_index];
 		if (!state->has_records || record->version > state->latest_version) {
-			utils_printf("found data: %.*s -> %lu\n",
-			             (int)sizeof state->type,
-			             state->type,
-			             (unsigned long)state->latest_version);
+			// utils_printf("found data: %.*s -> %lu\n",
+			//              (int)sizeof state->type,
+			//              state->type,
+			//              (unsigned long)state->latest_version);
 			state->has_records = true;
 			state->latest_version = record->version;
 			state->latest_offset = offset;
