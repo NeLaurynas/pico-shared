@@ -11,6 +11,7 @@
 #include <pico/time.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "shared_config.h"
 #include "shared_modules/memory/memory.h"
@@ -28,6 +29,14 @@ u32 utils_random_in_range(u32 fromInclusive, u32 toInclusive) {
 	const auto range = toInclusive - fromInclusive + 1; // +1 because to is inclusive
 	const auto rnd = get_rand_32();
 	return fromInclusive + (rnd % range);
+}
+
+void utils_random_bytes(u8 *buffer, const size_t len) {
+	for (size_t i = 0; i < len; i += 4) {
+		const auto r = get_rand_32();
+		const auto chunk = utils_min((size_t)4, len - i);
+		memcpy(buffer + i, &r, chunk);
+	}
 }
 
 float utils_print_onboard_temp() {
@@ -200,4 +209,37 @@ void utils_generate_id(char *dst, const size_t len) {
 		dst[i] = SYMBOLS[idx];
 	}
 	utils_printf("len=%zu, id=%.*s\n", len, (int)len, dst);
+}
+
+void utils_base64_encode(const u8 *input, const size_t len, char *output, const size_t out_cap) {
+	static constexpr char symbols[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+	if (unlikely(out_cap == 0)) return;
+	const size_t need = ((len + 2) / 3) * 4 + 1;
+	if (unlikely(out_cap < need)) return;
+
+	size_t i = 0, o = 0;
+	while (i + 2 < len) {
+		const u32 v = ((u32)input[i] << 16) | ((u32)input[i + 1] << 8) | (u32)input[i + 2];
+		output[o++] = symbols[(v >> 18) & 0x3F];
+		output[o++] = symbols[(v >> 12) & 0x3F];
+		output[o++] = symbols[(v >> 6) & 0x3F];
+		output[o++] = symbols[v & 0x3F];
+		i += 3;
+	}
+
+	if (i + 1 < len) {
+		const u32 v = ((u32)input[i] << 16) | ((u32)input[i + 1] << 8);
+		output[o++] = symbols[(v >> 18) & 0x3F];
+		output[o++] = symbols[(v >> 12) & 0x3F];
+		output[o++] = symbols[(v >> 6) & 0x3F];
+		output[o++] = '=';
+	} else if (i < len) {
+		const u32 v = ((u32)input[i] << 16);
+		output[o++] = symbols[(v >> 18) & 0x3F];
+		output[o++] = symbols[(v >> 12) & 0x3F];
+		output[o++] = '=';
+		output[o++] = '=';
+	}
+
+	output[o] = '\0';
 }

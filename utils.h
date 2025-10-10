@@ -211,6 +211,8 @@ float*: utils_avg_float  \
 
 u32 utils_random_in_range(u32 fromInclusive, u32 toInclusive);
 
+void utils_random_bytes(u8 *buffer, const size_t len);
+
 float utils_print_onboard_temp();
 
 void utils_print_cpu_speed();
@@ -263,5 +265,7 @@ void utils_crc_init();
 u32 utils_crc(const void *data, const size_t len);
 
 void utils_generate_id(char *dst, const size_t len);
+
+void utils_base64_encode(const u8 *input, const size_t len, char *output, const size_t out_cap);
 
 #endif //UTILS_H
