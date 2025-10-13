@@ -238,7 +238,7 @@ void cpu_store_load(const u8 load, u8 *loads, const size_t loads_len, u8 *index)
 		utils_printf("cpu_store_load -> loads_len == 0");
 		return;
 	}
-	
+
 	loads[*index] = load;
 	*index = (*index + 1) % loads_len;
 }
