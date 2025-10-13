@@ -4,6 +4,7 @@
 #include "cpu_cores.h"
 
 #include <hardware/adc.h>
+#include <hardware/clocks.h>
 #include <hardware/dma.h>
 #include <hardware/i2c.h>
 #include <hardware/irq.h>
@@ -17,6 +18,7 @@
 #include "utils.h"
 
 queue_t mod_cpu_core0_queue;
+static bool inited = false;
 
 static inline void pwm_off_all(void) {
 	for (u16 s = 0; s < NUM_PWM_SLICES; s++) pwm_set_enabled(s, false);
@@ -144,7 +146,6 @@ static inline void uart_off_all(void) {
 
 void cpu_cores_init_from_core0() {
 	queue_init(&mod_cpu_core0_queue, sizeof(mod_cores_cmd_t), 1);
-
 }
 
 [[noreturn]]
@@ -187,4 +188,57 @@ void cpu_cores_shutdown_from_core0() {
 
 	utils_printf("going to sleep (disabling clock)\n");
 	xosc_disable();
+}
+
+void cpu_init() {
+	adc_init();
+	adc_set_temp_sensor_enabled(true);
+	inited = true;
+}
+
+float cpu_temp() {
+	if (unlikely(!inited)) {
+		utils_printf("cpu_temp - call cpu_init first!");
+		return -1;
+	}
+	constexpr float conversionFactor = 3.3f / (1 << 12);
+
+	adc_select_input(4);
+
+	const float adc = (float)adc_read() * conversionFactor;
+	const float tempC = 27.0f - (adc - 0.706f) / 0.001721f;
+
+	utils_printf("Onboard temperature = %.02f C\n", tempC);
+
+	return tempC;
+}
+
+void cpu_print_speed() {
+#if DBG
+	const auto freq_hz = clock_get_hz(clk_sys);
+
+	const float freq_mhz = (float)freq_hz / 1'000'000.0f;
+	printf("System clock: %.2f MHz\n", freq_mhz);
+#endif
+}
+
+u8 cpu_calculate_load(const u32 actual_time, const u32 budget) {
+	if (budget == 0)
+		return actual_time ? 100u : 0u;
+
+	const u64 scaled = (u64)actual_time * 100u;
+	u32 load = (u32)((scaled + (budget / 2u)) / budget);
+
+	if (load > 100) load = 100;
+	return (u8)load;
+}
+
+void cpu_store_load(const u8 load, u8 *loads, const size_t loads_len, u8 *index) {
+	if (unlikely(loads_len == 0)) {
+		utils_printf("cpu_store_load -> loads_len == 0");
+		return;
+	}
+	
+	loads[*index] = load;
+	*index = (*index + 1) % loads_len;
 }

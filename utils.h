@@ -213,10 +213,6 @@ u32 utils_random_in_range(u32 fromInclusive, u32 toInclusive);
 
 void utils_random_bytes(u8 *buffer, const size_t len);
 
-float utils_print_onboard_temp();
-
-void utils_print_cpu_speed();
-
 float utils_calculate_pio_clk_div(const float instruction_execution_in_us);
 
 float utils_calculate_pio_clk_div_ns(const float instruction_execution_in_ns);

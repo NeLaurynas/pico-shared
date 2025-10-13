@@ -5,6 +5,8 @@
 #define PICO_SHARED_CPU_CORES_H
 #include <pico/util/queue.h>
 
+#include "shared_config.h"
+
 typedef enum {
 	CPU_CORES_CMD_NOOP = 0, CPU_CORES_CMD_SHUTDOWN = 1369420
 } mod_cores_cmd_t;
@@ -44,5 +46,15 @@ void cpu_cores_init_from_core0();
 	cyw43_arch_deinit();
 */
 void cpu_cores_shutdown_from_core0();
+
+void cpu_init();
+
+float cpu_temp();
+
+void cpu_print_speed();
+
+u8 cpu_calculate_load(u32 actual_time, u32 budget);
+
+void cpu_store_load(const u8 load, u8 *loads, const size_t loads_len, u8 *index);
 
 #endif //PICO_SHARED_CPU_CORES_H

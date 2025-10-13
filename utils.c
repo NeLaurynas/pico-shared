@@ -39,28 +39,6 @@ void utils_random_bytes(u8 *buffer, const size_t len) {
 	}
 }
 
-float utils_print_onboard_temp() {
-	constexpr float conversionFactor = 3.3f / (1 << 12);
-
-	const float adc = (float)adc_read() * conversionFactor;
-	const float tempC = 27.0f - (adc - 0.706f) / 0.001721f;
-
-#if DBG
-	printf("Onboard temperature = %.02f C\n", tempC);
-#endif
-
-	return tempC;
-}
-
-void utils_print_cpu_speed() {
-#if DBG
-	const auto freq_hz = clock_get_hz(clk_sys);
-
-	const float freq_mhz = (float)freq_hz / 1'000'000.0f;
-	printf("System clock: %.2f MHz\n", freq_mhz);
-#endif
-}
-
 float utils_calculate_pio_clk_div(const float instruction_execution_in_us) {
 	const auto frequency_hz = clock_get_hz(clk_sys);
 	auto const clk_div = ((float)frequency_hz * instruction_execution_in_us) / 1'000'000.0f;
