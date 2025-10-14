@@ -53,8 +53,8 @@ float cpu_temp();
 
 void cpu_print_speed();
 
-u8 cpu_calculate_load(u32 actual_time, u32 budget);
+float cpu_calculate_load(u32 actual_time, u32 budget);
 
-void cpu_store_load(const u8 load, u8 *loads, const size_t loads_len, u8 *index);
+void cpu_store_load(const float load, float *loads, const size_t loads_len, u8 *index);
 
 #endif //PICO_SHARED_CPU_CORES_H

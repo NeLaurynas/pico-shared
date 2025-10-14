@@ -222,18 +222,14 @@ void cpu_print_speed() {
 #endif
 }
 
-u8 cpu_calculate_load(const u32 actual_time, const u32 budget) {
+float cpu_calculate_load(const u32 actual_time, const u32 budget) {
 	if (budget == 0)
-		return actual_time ? 100u : 0u;
+		return actual_time ? 100.f : 0.f;
 
-	const u64 scaled = (u64)actual_time * 100u;
-	u32 load = (u32)((scaled + (budget / 2u)) / budget);
-
-	if (load > 100) load = 100;
-	return (u8)load;
+	return ((float)actual_time * 100.f) / (float)budget;
 }
 
-void cpu_store_load(const u8 load, u8 *loads, const size_t loads_len, u8 *index) {
+void cpu_store_load(const float load, float *loads, const size_t loads_len, u8 *index) {
 	if (unlikely(loads_len == 0)) {
 		utils_printf("cpu_store_load -> loads_len == 0");
 		return;
