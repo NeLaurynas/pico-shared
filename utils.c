@@ -31,7 +31,7 @@ u32 utils_random_in_range(u32 fromInclusive, u32 toInclusive) {
 	return fromInclusive + (rnd % range);
 }
 
-void utils_random_bytes(u8 *buffer, const size_t len) {
+void utils_random_bytes(u8 *buffer, const size_t len) {C
 	for (size_t i = 0; i < len; i += 4) {
 		const auto r = get_rand_32();
 		const auto chunk = utils_min((size_t)4, len - i);
@@ -182,11 +182,13 @@ void utils_generate_id(char *dst, const size_t len) {
 
 	if (dst == nullptr || len == 0) return;
 
-	for (size_t i = 0; i < len; ++i) {
+	const size_t n = len - 1; // generate exactly n symbols; leave 1 for NUL
+	for (size_t i = 0; i < n; ++i) {
 		const auto idx = utils_random_in_range(0, SYMBOLS_LEN - 1);
 		dst[i] = SYMBOLS[idx];
 	}
-	utils_printf("len=%zu, id=%.*s\n", len, (int)len, dst);
+	dst[n] = '\0';
+	utils_printf("len=%zu, id=%s\n", n, dst);
 }
 
 void utils_base64_encode(const u8 *input, const size_t len, char *output, const size_t out_cap) {
