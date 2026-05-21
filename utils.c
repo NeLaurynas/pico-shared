@@ -31,7 +31,7 @@ u32 utils_random_in_range(u32 fromInclusive, u32 toInclusive) {
 	return fromInclusive + (rnd % range);
 }
 
-void utils_random_bytes(u8 *buffer, const size_t len) {C
+void utils_random_bytes(u8 *buffer, const size_t len) {
 	for (size_t i = 0; i < len; i += 4) {
 		const auto r = get_rand_32();
 		const auto chunk = utils_min((size_t)4, len - i);
