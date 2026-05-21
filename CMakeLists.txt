@@ -70,12 +70,24 @@ endif ()
 math(EXPR MOD_STORAGE_BYTES "${MOD_STORAGE_SECTORS} * ${MOD_STORAGE_SECTOR_SIZE}")
 math(EXPR APP_FLASH_BYTES "${FLASH_TOTAL_BYTES} - ${MOD_STORAGE_BYTES}")
 
+if (NOT DEFINED PICO_SHARED_CONFIG_DIR)
+	set(PICO_SHARED_CONFIG_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated_config")
+	file(MAKE_DIRECTORY "${PICO_SHARED_CONFIG_DIR}")
+	configure_file(
+			"${CMAKE_CURRENT_LIST_DIR}/shared_config.example.h"
+			"${PICO_SHARED_CONFIG_DIR}/shared_config.h"
+			COPYONLY
+	)
+elseif (NOT EXISTS "${PICO_SHARED_CONFIG_DIR}/shared_config.h")
+	message(FATAL_ERROR "PICO_SHARED_CONFIG_DIR must contain shared_config.h: ${PICO_SHARED_CONFIG_DIR}")
+endif ()
+
 add_library(pico-shared STATIC
 		utils.c
 		utils.h
 		shared_modules/mcp/mcp.c
 		shared_modules/mcp/mcp.h
-		shared_config.h
+		shared_config.example.h
 		shared_modules/mp3/mp3.c
 		shared_modules/mp3/mp3.h
 		shared_modules/mp3/horn_mp3.h
@@ -137,8 +149,9 @@ target_link_libraries(pico-shared
 		pico_status_led)
 
 # Add the standard include files to the build
-target_include_directories(pico-shared PRIVATE
-		${CMAKE_CURRENT_LIST_DIR}
+target_include_directories(pico-shared PUBLIC
+		"${PICO_SHARED_CONFIG_DIR}"
+		"${CMAKE_CURRENT_LIST_DIR}"
 )
 
 target_link_libraries(pico-shared

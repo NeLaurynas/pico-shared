@@ -1,5 +1,7 @@
+// Copyright (C) 2025 Laurynas 'Deviltry' Ekekeke
+// SPDX-License-Identifier: BSD-3-Clause
+
 #ifndef SHARED_CONFIG_H
-#error "USE PROJECT SHARED_CONFIG.H"
 #define SHARED_CONFIG_H
 
 #include <hardware/i2c.h>

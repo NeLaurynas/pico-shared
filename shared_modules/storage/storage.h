@@ -31,7 +31,7 @@ static_assert(MOD_STORAGE_ENTRY_BYTES <= MOD_STORAGE_BYTES, "entry larger than r
  * @warning if multicore setup - \c flash_safe_execute_core_init() on coreA if calling from coreB.
  * @details
 configure_file(
-		${PICO_SHARED_COPY_PARENT}/pico-shared/memmap_storage.ld.in
+		${PICO_SHARED_SOURCE_DIR}/memmap_storage.ld.in
 		${CMAKE_CURRENT_BINARY_DIR}/memmap_storage.ld
 		@ONLY
 )
