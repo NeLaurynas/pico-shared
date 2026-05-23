@@ -3,9 +3,15 @@
 
 #ifndef PICO_SHARED_CPU_CORES_H
 #define PICO_SHARED_CPU_CORES_H
+
+#include <stdbool.h>
+#include <stddef.h>
+
 #include <pico/util/queue.h>
 
 #include "shared_config.h"
+
+#define CPU_PI_MAX_DIGITS 512
 
 typedef enum {
 	CPU_CORES_CMD_NOOP = 0, CPU_CORES_CMD_SHUTDOWN = 1369420
@@ -54,6 +60,8 @@ float cpu_temp();
 void cpu_print_speed();
 
 float cpu_calculate_load(u32 actual_time, u32 budget);
+
+[[nodiscard]] bool cpu_calculate_pi(u32 digits, char *out, size_t out_len);
 
 void cpu_store_load(const float load, float *loads, const size_t loads_len, u8 *index);
 

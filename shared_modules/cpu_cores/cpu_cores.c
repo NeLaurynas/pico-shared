@@ -20,6 +20,32 @@
 queue_t mod_cpu_core0_queue;
 static bool inited = false;
 
+#define CPU_PI_WORK_WORDS (((CPU_PI_MAX_DIGITS + 1u) * 10u / 3u) + 1u)
+
+static bool cpu_pi_emit_digit(
+		char *out,
+		const size_t out_len,
+		size_t *out_index,
+		u32 *raw_index,
+		const u32 digit
+) {
+	if (digit > 9) return false;
+
+	if (*raw_index > 0) {
+		const u32 pi_digit_index = *raw_index - 1u;
+		if (pi_digit_index == 1u) {
+			if (*out_index + 1u >= out_len) return false;
+			out[(*out_index)++] = '.';
+		}
+
+		if (*out_index + 1u >= out_len) return false;
+		out[(*out_index)++] = (char)('0' + digit);
+	}
+
+	(*raw_index)++;
+	return true;
+}
+
 static inline void pwm_off_all(void) {
 	for (u16 s = 0; s < NUM_PWM_SLICES; s++) pwm_set_enabled(s, false);
 #ifdef RESETS_RESET_PWM_BITS
@@ -227,6 +253,61 @@ float cpu_calculate_load(const u32 actual_time, const u32 budget) {
 		return actual_time ? 100.f : 0.f;
 
 	return ((float)actual_time * 100.f) / (float)budget;
+}
+
+bool cpu_calculate_pi(const u32 digits, char *out, const size_t out_len) {
+	if (out == nullptr) return false;
+	if (digits > CPU_PI_MAX_DIGITS) return false;
+
+	const size_t required_len = digits == 0 ? 2u : (size_t)digits + 3u;
+	if (out_len < required_len) return false;
+
+	const u32 emitted_pi_digits = digits + 1u;
+	const u32 work_words = (emitted_pi_digits * 10u / 3u) + 1u;
+	u16 remainders[CPU_PI_WORK_WORDS];
+
+	for (u32 i = 0; i < work_words; i++) remainders[i] = 2u;
+
+	u32 held_digit = 0;
+	u32 held_nines = 0;
+	u32 raw_index = 0;
+	size_t out_index = 0;
+
+	for (u32 digit_index = 0; digit_index < emitted_pi_digits; digit_index++) {
+		u32 carry = 0;
+
+		for (u32 i = work_words; i > 0; i--) {
+			const u32 denominator = (2u * i) - 1u;
+			const u32 value = (remainders[i - 1u] * 10u) + (carry * i);
+			remainders[i - 1u] = (u16)(value % denominator);
+			carry = value / denominator;
+		}
+
+		remainders[0] = (u16)(carry % 10u);
+		carry /= 10u;
+
+		if (carry == 9u) {
+			held_nines++;
+		} else if (carry == 10u) {
+			if (!cpu_pi_emit_digit(out, out_len, &out_index, &raw_index, held_digit + 1u)) return false;
+			while (held_nines > 0) {
+				if (!cpu_pi_emit_digit(out, out_len, &out_index, &raw_index, 0u)) return false;
+				held_nines--;
+			}
+			held_digit = 0;
+		} else {
+			if (!cpu_pi_emit_digit(out, out_len, &out_index, &raw_index, held_digit)) return false;
+			held_digit = carry;
+			while (held_nines > 0) {
+				if (!cpu_pi_emit_digit(out, out_len, &out_index, &raw_index, 9u)) return false;
+				held_nines--;
+			}
+		}
+	}
+
+	if (!cpu_pi_emit_digit(out, out_len, &out_index, &raw_index, held_digit)) return false;
+	out[out_index] = '\0';
+	return true;
 }
 
 void cpu_store_load(const float load, float *loads, const size_t loads_len, u8 *index) {
