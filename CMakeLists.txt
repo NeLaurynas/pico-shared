@@ -83,6 +83,8 @@ elseif (NOT EXISTS "${PICO_SHARED_CONFIG_DIR}/shared_config.h")
 endif ()
 
 add_library(pico-shared STATIC
+		frtos.c
+		frtos.h
 		utils.c
 		utils.h
 		shared_modules/mcp/mcp.c
@@ -120,6 +122,22 @@ target_compile_definitions(pico-shared PRIVATE
         MOD_STORAGE_BYTES=${MOD_STORAGE_BYTES}
         MOD_STORAGE_OFFSET=${APP_FLASH_BYTES}
 )
+
+if (TARGET FreeRTOS-Kernel)
+	target_compile_definitions(pico-shared PUBLIC PICO_SHARED_HAS_FREERTOS=1)
+	target_compile_definitions(pico-shared PRIVATE
+			FREE_RTOS_KERNEL_SMP=1
+			LIB_FREERTOS_KERNEL=1
+			PICO_CONFIG_RTOS_ADAPTER_HEADER=${FREERTOS_KERNEL_PATH}/${FREERTOS_KERNEL_PORT_PATH}/non_secure/freertos_sdk_config.h
+	)
+	target_include_directories(pico-shared PRIVATE
+			${FREERTOS_CONFIG_FILE_DIRECTORY}
+			${FREERTOS_KERNEL_PATH}/include
+			${FREERTOS_KERNEL_PATH}/${FREERTOS_KERNEL_PORT_PATH}/non_secure
+	)
+else ()
+	target_compile_definitions(pico-shared PUBLIC PICO_SHARED_HAS_FREERTOS=0)
+endif ()
 
 get_target_property(PICO_STD_INCLUDE pico_stdlib INTERFACE_INCLUDE_DIRECTORIES)
 
