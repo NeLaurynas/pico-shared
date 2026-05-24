@@ -22,6 +22,8 @@ static bool inited = false;
 
 #define CPU_PI_WORK_WORDS (((CPU_PI_MAX_DIGITS + 1u) * 10u / 3u) + 1u)
 
+static u16 cpu_pi_remainders[CPU_PI_WORK_WORDS];
+
 static bool cpu_pi_emit_digit(
 		char *out,
 		const size_t out_len,
@@ -264,9 +266,8 @@ bool cpu_calculate_pi(const u32 digits, char *out, const size_t out_len) {
 
 	const u32 emitted_pi_digits = digits + 1u;
 	const u32 work_words = (emitted_pi_digits * 10u / 3u) + 1u;
-	u16 remainders[CPU_PI_WORK_WORDS];
 
-	for (u32 i = 0; i < work_words; i++) remainders[i] = 2u;
+	for (u32 i = 0; i < work_words; i++) cpu_pi_remainders[i] = 2u;
 
 	u32 held_digit = 0;
 	u32 held_nines = 0;
@@ -278,12 +279,12 @@ bool cpu_calculate_pi(const u32 digits, char *out, const size_t out_len) {
 
 		for (u32 i = work_words; i > 0; i--) {
 			const u32 denominator = (2u * i) - 1u;
-			const u32 value = (remainders[i - 1u] * 10u) + (carry * i);
-			remainders[i - 1u] = (u16)(value % denominator);
+			const u32 value = (cpu_pi_remainders[i - 1u] * 10u) + (carry * i);
+			cpu_pi_remainders[i - 1u] = (u16)(value % denominator);
 			carry = value / denominator;
 		}
 
-		remainders[0] = (u16)(carry % 10u);
+		cpu_pi_remainders[0] = (u16)(carry % 10u);
 		carry /= 10u;
 
 		if (carry == 9u) {
