@@ -23,7 +23,7 @@ static inline size_t free_heap() {
 	return total_heap() - used_heap();
 }
 
-size_t memory_remaining_heap() {
+size_t memory_remaining_heap(const bool print_result) {
 	size_t lo = 0, hi = free_heap();
 
 	while (lo < hi) {
@@ -35,7 +35,7 @@ size_t memory_remaining_heap() {
 		} else hi = mid - 1;
 	}
 
-	utils_printf("Free memory: %u kB\n", lo / 1024);
+	if (print_result) utils_printf("Free memory: %zu kB\n", lo / 1024);
 
 	return lo;
 }

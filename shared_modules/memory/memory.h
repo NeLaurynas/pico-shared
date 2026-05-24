@@ -4,6 +4,7 @@
 #ifndef PICO_SHARED_MEMORY_H
 #define PICO_SHARED_MEMORY_H
 
+#include <stdbool.h>
 #include <stddef.h>
 
 /**
@@ -11,6 +12,6 @@
  * @warning Gets info by allocating \b ALL the heap, so if you want to allocate stuff while this is running - \e gg
  * @return Size in bytes
  */
-size_t memory_remaining_heap();
+size_t memory_remaining_heap(bool print_result);
 
 #endif //PICO_SHARED_MEMORY_H

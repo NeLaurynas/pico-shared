@@ -150,7 +150,7 @@ void utils_crc_init() {
 
 	crc_tab = malloc(256 * sizeof *crc_tab);
 	if (crc_tab == nullptr) {
-		utils_printf("!!! Couldn't allocate memory for crc tab (free memory: %u kB)\n", memory_remaining_heap() / 1024);
+		utils_printf("!!! Couldn't allocate memory for crc tab (free memory: %zu kB)\n", memory_remaining_heap(true) / 1024);
 		return;
 	}
 
