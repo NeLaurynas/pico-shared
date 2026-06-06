@@ -1,68 +1,12 @@
-// Copyright (C) 2025 Laurynas 'Deviltry' Ekekeke
+// Copyright (C) 2026 Laurynas 'Deviltry' Ekekeke
 // SPDX-License-Identifier: BSD-3-Clause
 
-#ifndef SHARED_CONFIG_H
-#define SHARED_CONFIG_H
+#pragma once
 
-#include <hardware/i2c.h>
-#include <pico/types.h>
-
-// TYPEDEFS
-typedef uint32_t u32;
-typedef uint16_t u16;
-typedef uint8_t u8;
-typedef int32_t i32;
-typedef int16_t i16;
-typedef int8_t i8;
-typedef int64_t i64;
-typedef uint64_t u64;
-#define US_IN_MS      1000ULL
-#define US_IN_SECOND  (1000ULL * US_IN_MS)
-#define US_IN_MINUTE  (60ULL * US_IN_SECOND)
-#define US_IN_HOUR    (60ULL * US_IN_MINUTE)
-
-
-#define DBG true
-
-// MCP
-/* MCP Layout (one byte) for controlled pins:
- *   bit 7: MCP 1 or MCP 2
- *   bit 6: Bank A or Bank B
- *   rest: 6-bit number (max val 63)
- *    7   6   5   4   3   2   1   0
- *  | M | B |       number          |
- *  ie: #define MOD_NUM_LEDG (u8)((0 << 7) | (1 << 6) | 1) // MCP - first bit - MCP 1, second bit - Bank B - pin 1
- */
-#define MOD_MCP_PIN_SDA				16
-#define MOD_MCP_PIN_SCL				17
-#define MOD_MCP_I2C_PORT			(&i2c0_inst)
-#define MOD_MCP_ADDR1				0x20
-#define MOD_MCP_ADDR2				0x21
-#define MOD_MCP_GPIO_CACHE_MS		6
-#define MOD_MCP_WRITE_RETRY_COUNT	2
-
-// MP3
-#define MOD_MP3_PIN 15
-#define MOD_MP3_DMA_CH1 2
-#define MOD_MP3_IRQ 0
-
-// WSLEDS
-#define MOD_WSLEDS_LED_COUNT	64
-#define MOD_WSLEDS_PIO			pio0
-#define MOD_WSLEDS_SM			1
-#define MOD_WSLEDS_DMA_CH		1
-#define MOD_WSLEDS_PIN			18
-
-// VOLTAGE MONITOR
-#define MOD_VMON_RES_POS	300000.0f // 300k ohms
-#define MOD_VMON_RES_NEG	68000.0f // 68k ohms
-#define MOD_VMON_VREF		3.3f // Pico uses 3.3 volts for reference
-#define MOD_VMON_ADC_PIN	26
-#define MOD_VMON_ADC		0
-#define MOD_VMON_DEFAULT_REF 9.8f
-
-// STORAGE
-#define MOD_STORAGE_ENTRY_PAGES 2 // this * MOD_STORAGE_PAGE_SIZE - how many pages should entry take
-#define MOD_STORAGE_DATA_TYPES	2 // how many different datatypes will be stored
-
-#endif //SHARED_CONFIG_H
+#include "shared_config.h"
+#include "shared_modules/mcp/shared_config.h"
+#include "shared_modules/mp3/shared_config.h"
+#include "shared_modules/storage/shared_config.h"
+#include "shared_modules/v_monitor/shared_config.h"
+#include "shared_modules/wsleds/shared_config.h"
+#include "shared_modules/wsledswhite/shared_config.h"

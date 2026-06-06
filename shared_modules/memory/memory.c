@@ -4,9 +4,16 @@
 #include "memory.h"
 
 #include <malloc.h>
+#include <stdio.h>
 #include <stdlib.h>
 
-#include "utils.h"
+#include "shared_config.h"
+
+#if defined(DBG) && DBG
+#define memory_printf(...) printf(__VA_ARGS__)
+#else
+#define memory_printf(...) (void)0
+#endif
 
 extern char __StackLimit, __bss_end__;
 
@@ -35,7 +42,7 @@ size_t memory_remaining_heap(const bool print_result) {
 		} else hi = mid - 1;
 	}
 
-	if (print_result) utils_printf("Free memory: %zu kB\n", lo / 1024);
+	if (print_result) memory_printf("Free memory: %zu kB\n", lo / 1024);
 
 	return lo;
 }

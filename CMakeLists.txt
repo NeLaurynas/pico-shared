@@ -4,20 +4,22 @@ set(CMAKE_C_STANDARD 23)
 set(CMAKE_C_EXTENSIONS ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+set(PICO_BOARD pico2_w CACHE STRING "Board type")
+
 # Standalone support: when configured directly, import the Pico SDK first so
 # the GCC ARM toolchain and flags are set before project() runs.
 if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-    include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
+	include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
 endif ()
 
 project(pico-shared C CXX ASM)
 
 if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-    pico_sdk_init()
+	pico_sdk_init()
 endif ()
 
 # Match the base project flag sets when included as a subdirectory, and
-# provide sensible defaults when building this library standalone.
+# provide sensible defaults when building these libraries standalone.
 if (NOT DEFINED BASE_CPU_FEATURE_FLAGS)
 	set(BASE_CPU_FEATURE_FLAGS
 			-mcpu=cortex-m33
@@ -57,141 +59,198 @@ if (NOT DEFINED BASE_RELEASE_FLAGS)
 	)
 endif ()
 
-# Storage Flash layout. Inherit from parent; provide sane defaults only if missing.
-if (NOT DEFINED FLASH_TOTAL_BYTES)
-    set(FLASH_TOTAL_BYTES 4194304 CACHE STRING "Total on-board flash size (bytes)") # Pico 2 flash size - 4 mB
-endif ()
-if (NOT DEFINED MOD_STORAGE_SECTOR_SIZE)
-    set(MOD_STORAGE_SECTOR_SIZE 4096 CACHE STRING "Flash sector size (bytes)") # Pico 2 sector size - 4 kB
-endif ()
-if (NOT DEFINED MOD_STORAGE_SECTORS)
-    set(MOD_STORAGE_SECTORS 128 CACHE STRING "Number of sectors to reserve for storage")
-endif ()
-math(EXPR MOD_STORAGE_BYTES "${MOD_STORAGE_SECTORS} * ${MOD_STORAGE_SECTOR_SIZE}")
-math(EXPR APP_FLASH_BYTES "${FLASH_TOTAL_BYTES} - ${MOD_STORAGE_BYTES}")
-
-if (NOT DEFINED PICO_SHARED_CONFIG_DIR)
-	set(PICO_SHARED_CONFIG_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated_config")
-	file(MAKE_DIRECTORY "${PICO_SHARED_CONFIG_DIR}")
-	configure_file(
-			"${CMAKE_CURRENT_LIST_DIR}/shared_config.example.h"
-			"${PICO_SHARED_CONFIG_DIR}/shared_config.h"
-			COPYONLY
-	)
-elseif (NOT EXISTS "${PICO_SHARED_CONFIG_DIR}/shared_config.h")
-	message(FATAL_ERROR "PICO_SHARED_CONFIG_DIR must contain shared_config.h: ${PICO_SHARED_CONFIG_DIR}")
-endif ()
-
-add_library(pico-shared STATIC
-		frtos.c
-		frtos.h
-		utils.c
-		utils.h
-		shared_modules/mcp/mcp.c
-		shared_modules/mcp/mcp.h
-		shared_config.example.h
-		shared_modules/mp3/mp3.c
-		shared_modules/mp3/mp3.h
-		shared_modules/mp3/horn_mp3.h
-		shared_modules/wsleds/wsleds.c
-		shared_modules/wsleds/wsleds.h
-		shared_modules/wsleds/wsleds_data.h
-		shared_modules/wsledswhite/wsledswhite.c
-		shared_modules/wsledswhite/wsledswhite.h
-		shared_modules/wsledswhite/wsledswhite_data.h
-		anim.c
-		anim.h
-		shared_modules/v_monitor/v_monitor.c
-		shared_modules/v_monitor/v_monitor.h
-		shared_modules/cpu_cores/cpu_cores.c
-		shared_modules/cpu_cores/cpu_cores.h
-		shared_modules/memory/memory.c
-		shared_modules/memory/memory.h
-		shared_modules/storage/storage.c
-		shared_modules/storage/storage.h
-		str.c
-		str.h
-)
-
-# Ensure the storage layout macros match the parent's configuration.
-target_compile_definitions(pico-shared PRIVATE
-        PICO_FLASH_SIZE_BYTES=${FLASH_TOTAL_BYTES}
-        MOD_STORAGE_SECTORS=${MOD_STORAGE_SECTORS}
-        MOD_STORAGE_SECTOR_SIZE=${MOD_STORAGE_SECTOR_SIZE}
-        MOD_STORAGE_PAGE_SIZE=256 # Pico 2 page size in bytes
-        MOD_STORAGE_BYTES=${MOD_STORAGE_BYTES}
-        MOD_STORAGE_OFFSET=${APP_FLASH_BYTES}
-)
-
-if (TARGET FreeRTOS-Kernel)
-	target_compile_definitions(pico-shared PUBLIC PICO_SHARED_HAS_FREERTOS=1)
-	target_compile_definitions(pico-shared PRIVATE
-			FREE_RTOS_KERNEL_SMP=1
-			LIB_FREERTOS_KERNEL=1
-			PICO_CONFIG_RTOS_ADAPTER_HEADER=${FREERTOS_KERNEL_PATH}/${FREERTOS_KERNEL_PORT_PATH}/non_secure/freertos_sdk_config.h
-	)
-	target_include_directories(pico-shared PRIVATE
-			${FREERTOS_CONFIG_FILE_DIRECTORY}
-			${FREERTOS_KERNEL_PATH}/include
-			${FREERTOS_KERNEL_PATH}/${FREERTOS_KERNEL_PORT_PATH}/non_secure
-	)
-else ()
-	target_compile_definitions(pico-shared PUBLIC PICO_SHARED_HAS_FREERTOS=0)
-endif ()
-
-get_target_property(PICO_STD_INCLUDE pico_stdlib INTERFACE_INCLUDE_DIRECTORIES)
-
-target_compile_options(pico-shared PRIVATE
+add_library(pico_shared_options INTERFACE)
+target_compile_options(pico_shared_options INTERFACE
 		${BASE_CPU_FEATURE_FLAGS}
 		${BASE_SECTION_FLAGS}
 		${BASE_WARNING_FLAGS}
 		$<$<CONFIG:Debug>:${BASE_DEBUG_FLAGS}>
 		$<$<CONFIG:Release>:${BASE_RELEASE_FLAGS}>
-)
-
-target_compile_options(pico-shared PRIVATE
 		$<$<COMPILE_LANGUAGE:C>:-Wno-old-style-declaration>
 )
-
-target_link_options(pico-shared PRIVATE
+target_link_options(pico_shared_options INTERFACE
 		${BASE_CPU_FEATURE_FLAGS}
 		$<$<CONFIG:Release>:-Wl,--strip-all>
 )
 
-# PIO
-pico_generate_pio_header(pico-shared ${CMAKE_CURRENT_LIST_DIR}/shared_modules/wsleds/pio_wsleds.pio)
-pico_generate_pio_header(pico-shared ${CMAKE_CURRENT_LIST_DIR}/shared_modules/wsledswhite/pio_wsledswhite.pio)
-
-target_link_libraries(pico-shared
-		pico_stdlib
-		pico_status_led)
-
-# Add the standard include files to the build
-target_include_directories(pico-shared PUBLIC
-		"${PICO_SHARED_CONFIG_DIR}"
+add_library(pico_shared_config INTERFACE)
+target_include_directories(pico_shared_config INTERFACE
 		"${CMAKE_CURRENT_LIST_DIR}"
 )
 
-target_link_libraries(pico-shared
-		hardware_i2c
-		hardware_pio
-		hardware_adc
-		hardware_dma
-		hardware_pwm
-		pico_multicore
-		hardware_irq
-		pico_flash
-		hardware_flash
-		pico_rand
-		$<$<CONFIG:Debug>:hardware_uart>
+function(pico_shared_add_library target)
+	add_library(${target} STATIC ${ARGN})
+	target_link_libraries(${target}
+			PUBLIC
+				pico_shared_config
+			PRIVATE
+				pico_shared_options
+	)
+endfunction()
+
+pico_shared_add_library(pico_shared_memory
+		shared_modules/memory/memory.c
+		shared_modules/memory/memory.h
 )
 
-# Only generate and apply a linker script when this library is built standalone.
-if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-    configure_file(
-            memmap_storage.ld.in
-            ${CMAKE_CURRENT_BINARY_DIR}/memmap_storage.ld
-            @ONLY
-    )
-    pico_set_linker_script(pico-shared ${CMAKE_CURRENT_BINARY_DIR}/memmap_storage.ld)
+pico_shared_add_library(pico_shared_utils
+		utils.c
+		utils.h
+)
+target_link_libraries(pico_shared_utils
+		PUBLIC
+			hardware_pwm
+		PRIVATE
+			hardware_adc
+			pico_rand
+			pico_shared_memory
+			pico_status_led
+			pico_stdlib
+)
+
+pico_shared_add_library(pico_shared_frtos
+		frtos.c
+		frtos.h
+)
+if (TARGET FreeRTOS-Kernel)
+	target_compile_definitions(pico_shared_frtos PUBLIC PICO_SHARED_HAS_FREERTOS=1)
+	target_compile_definitions(pico_shared_frtos PRIVATE
+			FREE_RTOS_KERNEL_SMP=1
+			LIB_FREERTOS_KERNEL=1
+			PICO_CONFIG_RTOS_ADAPTER_HEADER=${FREERTOS_KERNEL_PATH}/${FREERTOS_KERNEL_PORT_PATH}/non_secure/freertos_sdk_config.h
+	)
+	target_include_directories(pico_shared_frtos PRIVATE
+			${FREERTOS_CONFIG_FILE_DIRECTORY}
+			${FREERTOS_KERNEL_PATH}/include
+			${FREERTOS_KERNEL_PATH}/${FREERTOS_KERNEL_PORT_PATH}/non_secure
+	)
+else ()
+	target_compile_definitions(pico_shared_frtos PUBLIC PICO_SHARED_HAS_FREERTOS=0)
 endif ()
+target_link_libraries(pico_shared_frtos PRIVATE pico_stdlib)
+
+pico_shared_add_library(pico_shared_str
+		str.c
+		str.h
+)
+
+pico_shared_add_library(pico_shared_anim
+		anim.c
+		anim.h
+)
+target_link_libraries(pico_shared_anim PRIVATE
+		m
+		pico_shared_utils
+)
+
+pico_shared_add_library(pico_shared_mcp
+		shared_modules/mcp/mcp.c
+		shared_modules/mcp/mcp.h
+		shared_modules/mcp/shared_config.h
+)
+target_link_libraries(pico_shared_mcp PRIVATE
+		hardware_gpio
+		hardware_i2c
+		pico_shared_utils
+)
+
+pico_shared_add_library(pico_shared_storage
+		shared_modules/storage/storage.c
+		shared_modules/storage/storage.h
+		shared_modules/storage/shared_config.h
+)
+target_link_libraries(pico_shared_storage PRIVATE
+		hardware_flash
+		pico_flash
+		pico_multicore
+		pico_shared_utils
+)
+
+pico_shared_add_library(pico_shared_v_monitor
+		shared_modules/v_monitor/v_monitor.c
+		shared_modules/v_monitor/v_monitor.h
+		shared_modules/v_monitor/shared_config.h
+)
+target_link_libraries(pico_shared_v_monitor PRIVATE
+		hardware_adc
+		pico_shared_utils
+)
+
+pico_shared_add_library(pico_shared_wsleds
+		shared_modules/wsleds/wsleds.c
+		shared_modules/wsleds/wsleds.h
+		shared_modules/wsleds/wsleds_data.h
+		shared_modules/wsleds/shared_config.h
+)
+pico_generate_pio_header(pico_shared_wsleds ${CMAKE_CURRENT_LIST_DIR}/shared_modules/wsleds/pio_wsleds.pio)
+target_link_libraries(pico_shared_wsleds PRIVATE
+		hardware_dma
+		hardware_pio
+		pico_shared_anim
+		pico_shared_utils
+)
+
+pico_shared_add_library(pico_shared_wsledswhite
+		shared_modules/wsledswhite/wsledswhite.c
+		shared_modules/wsledswhite/wsledswhite.h
+		shared_modules/wsledswhite/wsledswhite_data.h
+		shared_modules/wsledswhite/shared_config.h
+)
+pico_generate_pio_header(pico_shared_wsledswhite ${CMAKE_CURRENT_LIST_DIR}/shared_modules/wsledswhite/pio_wsledswhite.pio)
+target_link_libraries(pico_shared_wsledswhite PRIVATE
+		hardware_dma
+		hardware_pio
+		pico_shared_anim
+		pico_shared_utils
+)
+
+pico_shared_add_library(pico_shared_cpu_cores
+		shared_modules/cpu_cores/cpu_cores.c
+		shared_modules/cpu_cores/cpu_cores.h
+)
+target_link_libraries(pico_shared_cpu_cores
+		PUBLIC
+			pico_util
+		PRIVATE
+			hardware_adc
+			hardware_clocks
+			hardware_dma
+			hardware_i2c
+			hardware_irq
+			hardware_pio
+			hardware_pwm
+			hardware_uart
+			hardware_xosc
+			pico_multicore
+			pico_shared_utils
+)
+
+pico_shared_add_library(pico_shared_mp3
+		shared_modules/mp3/mp3.c
+		shared_modules/mp3/mp3.h
+		shared_modules/mp3/horn_mp3.h
+		shared_modules/mp3/shared_config.h
+)
+
+add_library(pico_shared_app_settings INTERFACE)
+target_link_libraries(pico_shared_app_settings INTERFACE
+		pico_shared_config
+		pico_shared_storage
+)
+
+add_library(pico-shared INTERFACE)
+target_link_libraries(pico-shared INTERFACE
+		pico_shared_anim
+		pico_shared_app_settings
+		pico_shared_cpu_cores
+		pico_shared_frtos
+		pico_shared_mcp
+		pico_shared_memory
+		pico_shared_mp3
+		pico_shared_storage
+		pico_shared_str
+		pico_shared_utils
+		pico_shared_v_monitor
+		pico_shared_wsleds
+		pico_shared_wsledswhite
+)
