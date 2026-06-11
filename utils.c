@@ -19,16 +19,12 @@
 static bool crc_init = false;
 static u32 *crc_tab;
 
-u32 utils_random_in_range(u32 fromInclusive, u32 toInclusive) {
-	if (fromInclusive > toInclusive) {
-		const auto tmp = toInclusive;
-		toInclusive = fromInclusive;
-		fromInclusive = tmp;
-	}
+u32 utils_random_in_range(u32 from_inclusive, u32 to_inclusive) {
+	if (from_inclusive > to_inclusive) utils_swap(&from_inclusive, &to_inclusive);
 
-	const auto range = toInclusive - fromInclusive + 1; // +1 because to is inclusive
+	const auto range = to_inclusive - from_inclusive + 1; // +1 because to is inclusive
 	const auto rnd = get_rand_32();
-	return fromInclusive + (rnd % range);
+	return from_inclusive + (rnd % range);
 }
 
 void utils_random_bytes(u8 *buffer, const size_t len) {
@@ -88,7 +84,7 @@ inline i32 utils_time_after_us(const u32 time, const u32 target_time) {
 	const i32 long_blink = code / 10;
 	const i32 short_blink = code % 10;
 	// ReSharper disable once CppDFAEndlessLoop
-	for (;;) {
+	while (true) {
 		utils_printf("!!! ERROR MODE: %ld\n", code);
 		for (auto i = 0; i < long_blink; i++) {
 			utils_internal_led(true);

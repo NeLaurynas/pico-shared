@@ -1,10 +1,8 @@
 // Copyright (C) 2025 Laurynas 'Deviltry' Ekekeke
 // SPDX-License-Identifier: BSD-3-Clause
 
-#ifndef PICO_SHARED_MEMORY_H
-#define PICO_SHARED_MEMORY_H
+#pragma once
 
-#include <stdbool.h>
 #include <stddef.h>
 
 /**
@@ -13,5 +11,3 @@
  * @return Size in bytes
  */
 size_t memory_remaining_heap(bool print_result);
-
-#endif //PICO_SHARED_MEMORY_H

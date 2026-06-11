@@ -1,10 +1,7 @@
 // Copyright (C) 2026 Laurynas 'Deviltry' Ekekeke
 // SPDX-License-Identifier: BSD-3-Clause
 
-#ifndef PICO_SHARED_FRTOS_H
-#define PICO_SHARED_FRTOS_H
-
-#include <stdbool.h>
+#pragma once
 
 /**
  * Returns CPU busy percentage since the previous sample.
@@ -15,5 +12,3 @@
 bool frtos_cpu_usage_percent(float *out_percent);
 
 void frtos_cpu_usage_reset();
-
-#endif

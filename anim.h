@@ -1,8 +1,7 @@
 // Copyright (C) 2025 Laurynas 'Deviltry' Ekekeke
 // SPDX-License-Identifier: BSD-3-Clause
 
-#ifndef ANIM_H
-#define ANIM_H
+#pragma once
 
 #include "shared_config.h"
 
@@ -28,5 +27,3 @@ u8 anim_color_reduction(const anim_direction_t direction, const u16 frame, const
 u32 anim_color_blend(const u32 color_from, const u32 color_to, const u16 frame, const u16 frame_count, const float speed, const float freq);
 
 u32 anim_reduce_brightness(const u32 reduction, const u32 color);
-
-#endif //ANIM_H

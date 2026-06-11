@@ -1,8 +1,7 @@
 // Copyright (C) 2024 Laurynas 'Deviltry' Ekekeke
 // SPDX-License-Identifier: BSD-3-Clause
 
-#ifndef UTILS_H
-#define UTILS_H
+#pragma once
 
 #include <hardware/pwm.h>
 #include <stdio.h>
@@ -209,7 +208,7 @@ i32*: utils_avg_i32,  \
 float*: utils_avg_float  \
 )(array, array_size)
 
-u32 utils_random_in_range(u32 fromInclusive, u32 toInclusive);
+u32 utils_random_in_range(u32 from_inclusive, u32 to_inclusive);
 
 void utils_random_bytes(u8 *buffer, const size_t len);
 
@@ -263,5 +262,3 @@ u32 utils_crc(const void *data, const size_t len);
 void utils_generate_id(char *dst, const size_t len);
 
 void utils_base64_encode(const u8 *input, const size_t len, char *output, const size_t out_cap);
-
-#endif //UTILS_H
