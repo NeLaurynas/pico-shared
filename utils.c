@@ -38,14 +38,12 @@ void utils_printf_impl(const char *format, ...) {
 	const auto count = vsnprintf(buffer, sizeof buffer, format, args);
 	va_end(args);
 
-	if (count <= 0) {
-		atomic_flag_clear_explicit(&utils_printf_lock, memory_order_release);
-		return;
+	if (count > 0) {
+		const auto len = (size_t)count < sizeof buffer ? (size_t)count : sizeof buffer - 1;
+		(void)fwrite(buffer, 1, len, stdout);
+		utils_printf_sink(buffer, len);
 	}
 
-	const auto len = (size_t)count < sizeof buffer ? (size_t)count : sizeof buffer - 1;
-	(void)fwrite(buffer, 1, len, stdout);
-	utils_printf_sink(buffer, len);
 	atomic_flag_clear_explicit(&utils_printf_lock, memory_order_release);
 }
 
