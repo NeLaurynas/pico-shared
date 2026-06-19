@@ -228,11 +228,10 @@ void utils_printf_impl(const char *format, ...);
 
 void utils_printf_sink(const char *text, const size_t len);
 
-#if defined(DBG) && DBG
+// Always routes through utils_printf_impl so logs still reach the sink
+// (e.g. Bluetooth) when DBG is 0. The stdout path inside the impl is compiled
+// out unless DBG is set.
 #define utils_printf(...) utils_printf_impl(__VA_ARGS__)
-#else
-#define utils_printf(...) (void)0
-#endif
 
 u32 utils_time_diff_ms(const u32 start_us, const u32 end_us);
 

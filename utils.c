@@ -40,7 +40,9 @@ void utils_printf_impl(const char *format, ...) {
 
 	if (count > 0) {
 		const auto len = (size_t)count < sizeof buffer ? (size_t)count : sizeof buffer - 1;
+#if defined(DBG) && DBG
 		(void)fwrite(buffer, 1, len, stdout);
+#endif
 		utils_printf_sink(buffer, len);
 	}
 
