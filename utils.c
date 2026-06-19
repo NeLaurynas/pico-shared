@@ -9,6 +9,8 @@
 #include <pico/rand.h>
 #include <pico/status_led.h>
 #include <pico/time.h>
+#include <stdarg.h>
+#include <stdatomic.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -18,6 +20,34 @@
 
 static bool crc_init = false;
 static u32 *crc_tab;
+static atomic_flag utils_printf_lock = ATOMIC_FLAG_INIT;
+
+void __attribute__((weak)) utils_printf_sink(const char *text, const size_t len) {
+	(void)text;
+	(void)len;
+}
+
+void utils_printf_impl(const char *format, ...) {
+	static char buffer[512];
+
+	if (format == nullptr) return;
+	if (atomic_flag_test_and_set_explicit(&utils_printf_lock, memory_order_acquire)) return;
+
+	va_list args;
+	va_start(args, format);
+	const auto count = vsnprintf(buffer, sizeof buffer, format, args);
+	va_end(args);
+
+	if (count <= 0) {
+		atomic_flag_clear_explicit(&utils_printf_lock, memory_order_release);
+		return;
+	}
+
+	const auto len = (size_t)count < sizeof buffer ? (size_t)count : sizeof buffer - 1;
+	(void)fwrite(buffer, 1, len, stdout);
+	utils_printf_sink(buffer, len);
+	atomic_flag_clear_explicit(&utils_printf_lock, memory_order_release);
+}
 
 u32 utils_random_in_range(u32 from_inclusive, u32 to_inclusive) {
 	if (from_inclusive > to_inclusive) utils_swap(&from_inclusive, &to_inclusive);

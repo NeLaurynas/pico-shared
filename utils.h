@@ -224,8 +224,12 @@ float utils_calculate_pio_clk_div_ns(const float instruction_execution_in_ns);
  */
 float utils_calculate_pwm_divider(const u32 top, const float freq_khz);
 
+void utils_printf_impl(const char *format, ...);
+
+void utils_printf_sink(const char *text, const size_t len);
+
 #if defined(DBG) && DBG
-#define utils_printf(...) printf(__VA_ARGS__)
+#define utils_printf(...) utils_printf_impl(__VA_ARGS__)
 #else
 #define utils_printf(...) (void)0
 #endif
