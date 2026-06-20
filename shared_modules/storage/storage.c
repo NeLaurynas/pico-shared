@@ -57,7 +57,7 @@ static inline u32 entry_advance(const u32 offset) {
 }
 
 static bool entry_is_erased(const u8 *flash_location) {
-	for (auto i = 0; i < 16; i++) if (flash_location[i] != 0xFF) return false; // quick check of entry header
+	for (u8 i = 0; i < 16; i++) if (flash_location[i] != 0b11111111) return false; // quick check of entry header
 	return true;
 }
 
@@ -75,7 +75,7 @@ static bool type_identifier_complete(const storage_type_state_t *state) {
 }
 
 static i8 index_by_type(const char type[4]) {
-	for (i8 i = 0; i < MOD_STORAGE_DATA_TYPES; i++) if (memcmp(type, storage_state.types[i].type, 4) == 0) return i;
+	for (u8 i = 0; i < MOD_STORAGE_DATA_TYPES; i++) if (memcmp(type, storage_state.types[i].type, 4) == 0) return (i8)i;
 
 	return -1;
 }
@@ -83,7 +83,7 @@ static i8 index_by_type(const char type[4]) {
 static void full_rescan() {
 	storage_state.latest_offset = 0;
 	storage_state.has_records = false;
-	for (auto i = 0; i < MOD_STORAGE_DATA_TYPES; i++) {
+	for (u8 i = 0; i < MOD_STORAGE_DATA_TYPES; i++) {
 		storage_state.types[i].has_records = false;
 		storage_state.types[i].latest_offset = 0;
 		storage_state.types[i].latest_version = 0;
@@ -115,7 +115,7 @@ static void full_rescan() {
 		}
 	}
 
-	for (auto i = 0; i < MOD_STORAGE_DATA_TYPES; i++) {
+	for (u8 i = 0; i < MOD_STORAGE_DATA_TYPES; i++) {
 			if (!storage_state.types[i].has_records)
 				utils_printf("no data for type %.*s\n",
 				             (int)sizeof storage_state.types[i].type,
@@ -126,16 +126,16 @@ static void full_rescan() {
 void storage_init(bool out[MOD_STORAGE_DATA_TYPES]) {
 	utils_crc_init(); // just to be sure
 
-	for (i8 i = 0; i < MOD_STORAGE_DATA_TYPES; i++) {
+	for (u8 i = 0; i < MOD_STORAGE_DATA_TYPES; i++) {
 		if (!type_identifier_complete(&storage_state.types[i])) {
-			utils_printf("storage_init: type index %d identifier missing\n", i);
+			utils_printf("storage_init: type index %u identifier missing\n", i);
 			panic("about to fuck up storage mate");
 		}
 	}
 
 	full_rescan();
 
-	for (auto i = 0; i < MOD_STORAGE_DATA_TYPES; i++) out[i] = storage_state.types[i].has_records;
+	for (u8 i = 0; i < MOD_STORAGE_DATA_TYPES; i++) out[i] = storage_state.types[i].has_records;
 }
 
 void storage_register_data_type(const u8 index, const char identifier[4]) {
@@ -173,7 +173,7 @@ bool storage_save(const u8 index, const void *data, const u32 len) {
 	u32 destination = storage_state.has_records ? entry_advance(storage_state.latest_offset) : 0u;
 
 	u8 entry[MOD_STORAGE_ENTRY_BYTES];
-	memset(entry, 0xFF, sizeof entry);
+	memset(entry, 0b11111111, sizeof entry);
 
 	storage_record_t *record = (storage_record_t*)entry;
 	storage_type_state_t *state = &storage_state.types[index];
@@ -251,7 +251,7 @@ bool storage_save(const u8 index, const void *data, const u32 len) {
 }
 
 void storage_erase_all() {
-	for (auto i = 0; i < MOD_STORAGE_SECTORS; i++) {
+	for (u32 i = 0; i < MOD_STORAGE_SECTORS; i++) {
 		const u32 sector_offset = sector_start(i);
 		const u32 off = MOD_STORAGE_OFFSET + sector_offset;
 
