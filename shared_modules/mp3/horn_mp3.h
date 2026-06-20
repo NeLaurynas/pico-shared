@@ -1,6 +1,8 @@
 // Copyright (C) 2025 Laurynas 'Deviltry' Ekekeke
 // SPDX-License-Identifier: BSD-3-Clause
 
+#pragma once
+
 // const - means in .rodata, not in RAM, so basically flash storage
 static const unsigned char horn_mp3[] = {
   0x49, 0x44, 0x33, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0b, 0x54, 0x43,
