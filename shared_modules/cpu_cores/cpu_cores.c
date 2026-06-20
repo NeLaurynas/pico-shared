@@ -48,28 +48,28 @@ static bool cpu_pi_emit_digit(
 	return true;
 }
 
-static inline void pwm_off_all(void) {
+static inline void pwm_off_all() {
 	for (u16 s = 0; s < NUM_PWM_SLICES; s++) pwm_set_enabled(s, false);
 #ifdef RESETS_RESET_PWM_BITS
 	reset_block(RESETS_RESET_PWM_BITS);
 #endif
 }
 
-static inline void pio_off_all(void) {
+static inline void pio_off_all() {
 #if NUM_PIOS >= 1
-	pio_set_sm_mask_enabled(pio0, 0xF, false);
+	pio_set_sm_mask_enabled(pio0, 0b1111, false);
 	pio_clear_instruction_memory(pio0);
 #endif
 #if NUM_PIOS >= 2
-	pio_set_sm_mask_enabled(pio1, 0xF, false);
+	pio_set_sm_mask_enabled(pio1, 0b1111, false);
 	pio_clear_instruction_memory(pio1);
 #endif
 #if NUM_PIOS >= 3
-	pio_set_sm_mask_enabled(pio2, 0xF, false);
+	pio_set_sm_mask_enabled(pio2, 0b1111, false);
 	pio_clear_instruction_memory(pio2);
 #endif
 #if NUM_PIOS >= 4
-	pio_set_sm_mask_enabled(pio3, 0xF, false);
+	pio_set_sm_mask_enabled(pio3, 0b1111, false);
 	pio_clear_instruction_memory(pio3);
 #endif
 
@@ -87,7 +87,7 @@ static inline void pio_off_all(void) {
 #endif
 }
 
-static inline void dma_off_all(void) {
+static inline void dma_off_all() {
 	for (u16 ch = 0; ch < NUM_DMA_CHANNELS; ch++) {
 		dma_channel_abort(ch);
 	}
@@ -107,7 +107,7 @@ static inline void dma_off_all(void) {
 #endif
 }
 
-static inline void adc_off_all(void) {
+static inline void adc_off_all() {
 	adc_set_temp_sensor_enabled(false);
 	adc_run(false);
 #ifdef ADC_IRQ_FIFO
@@ -118,7 +118,7 @@ static inline void adc_off_all(void) {
 #endif
 }
 
-static inline void i2c_off_all(void) {
+static inline void i2c_off_all() {
 #ifdef i2c0
 	i2c_deinit(i2c0);
 #endif
@@ -145,7 +145,7 @@ static inline void i2c_off_all(void) {
 #endif
 }
 
-static inline void uart_off_all(void) {
+static inline void uart_off_all() {
 #ifdef uart0
 	uart_deinit(uart0);
 #endif
@@ -177,7 +177,7 @@ void cpu_cores_init_from_core0() {
 }
 
 [[noreturn]]
-void cpu_cores_send_shutdown_to_core0_from_core1(void) {
+void cpu_cores_send_shutdown_to_core0_from_core1() {
 	const mod_cores_cmd_t cmd = CPU_CORES_CMD_SHUTDOWN;
 	utils_printf("sending shutdown cmd to core0\n");
 	queue_add_blocking(&mod_cpu_core0_queue, &cmd); // this copies, doesn't just passes address

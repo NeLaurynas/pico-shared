@@ -1,8 +1,7 @@
 // Copyright (C) 2025 Laurynas 'Deviltry' Ekekeke
 // SPDX-License-Identifier: BSD-3-Clause
 
-#ifndef WSLEDSWHITE_DATA_H
-#define WSLEDSWHITE_DATA_H
+#pragma once
 
 // COLORS
 
@@ -16,5 +15,3 @@
 #define COLOR_PURPLE 	0b00000000'11111111'11111111'00000000
 #define COLOR_CYAN   	0b11111111'00000000'11111111'00000000
 #define COLOR_OFF    	0b00000000'00000000'00000000'00000000
-
-#endif //WSLEDSWHITE_DATA_H

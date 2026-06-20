@@ -1,8 +1,7 @@
 // Copyright (C) 2025 Laurynas 'Deviltry' Ekekeke
 // SPDX-License-Identifier: BSD-3-Clause
 
-#ifndef PICO_SHARED_CPU_CORES_H
-#define PICO_SHARED_CPU_CORES_H
+#pragma once
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -64,5 +63,3 @@ float cpu_calculate_load(u32 actual_time, u32 budget);
 [[nodiscard]] bool cpu_calculate_pi(u32 digits, char *out, size_t out_len);
 
 void cpu_store_load(const float load, float *loads, const size_t loads_len, u8 *index);
-
-#endif //PICO_SHARED_CPU_CORES_H

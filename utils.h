@@ -105,7 +105,7 @@ i32*: utils_swap_i32 \
 typedef u32 (*array_elem_reader_t)(const void *, size_t);
 
 static inline float utils_avg_base(const void *array, const size_t array_size, const array_elem_reader_t reader) {
-	if (!array || array_size == 0 || UTILS_AVG_CHUNK_SIZE == 0) return 0.0f;
+	if (array == nullptr || array_size == 0 || UTILS_AVG_CHUNK_SIZE == 0) return 0.0f;
 
 	const size_t full_chunks = array_size / UTILS_AVG_CHUNK_SIZE;
 	const size_t remainder = array_size % UTILS_AVG_CHUNK_SIZE;
@@ -168,7 +168,7 @@ static inline float utils_avg_i32(const i32 *array, const size_t array_size) {
 }
 
 static inline float utils_avg_float(const float *array, const size_t array_size) {
-	if (!array || array_size == 0 || UTILS_AVG_CHUNK_SIZE == 0) return 0.0f;
+	if (array == nullptr || array_size == 0 || UTILS_AVG_CHUNK_SIZE == 0) return 0.0f;
 
 	const size_t full_chunks = array_size / UTILS_AVG_CHUNK_SIZE;
 	const size_t remainder = array_size % UTILS_AVG_CHUNK_SIZE;

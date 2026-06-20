@@ -1,8 +1,7 @@
 // Copyright (C) 2025 Laurynas 'Deviltry' Ekekeke
 // SPDX-License-Identifier: BSD-3-Clause
 
-#ifndef WSLEDS_DATA_H
-#define WSLEDS_DATA_H
+#pragma once
 
 // COLORS
 
@@ -128,5 +127,3 @@ static const u32 WSLEDS_NUMBERS[10][64] = {
 		COLOR_OFF, COLOR_OFF, COLOR_OFF, COLOR_OFF, COLOR_OFF, COLOR_OFF, COLOR_OFF, COLOR_OFF
 	}
 };
-
-#endif //WSLEDS_DATA_H

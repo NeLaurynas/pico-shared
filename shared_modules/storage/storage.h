@@ -1,8 +1,7 @@
 // Copyright (C) 2025 Laurynas 'Deviltry' Ekekeke
 // SPDX-License-Identifier: BSD-3-Clause
 
-#ifndef PICO_SHARED_STORAGE_H
-#define PICO_SHARED_STORAGE_H
+#pragma once
 
 #include "shared_config.h"
 
@@ -47,5 +46,3 @@ void storage_register_data_type(const u8 index, const char identifier[4]);
 [[nodiscard]] bool storage_save(const u8 index, const void *data, const u32 len);
 
 void storage_erase_all();
-
-#endif //PICO_SHARED_STORAGE_H

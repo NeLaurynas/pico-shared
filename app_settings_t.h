@@ -1,8 +1,7 @@
 // Copyright (C) 2025 Laurynas 'Deviltry' Ekekeke
 // SPDX-License-Identifier: BSD-3-Clause
 
-#ifndef HUMMER_APP_SETTINGS_T_H
-#define HUMMER_APP_SETTINGS_T_H
+#pragma once
 
 #include "shared_config.h"
 #include "shared_modules/storage/storage.h"
@@ -23,5 +22,3 @@ typedef struct {
 static_assert(sizeof(app_settings_t) <= MOD_STORAGE_PAYLOAD_BYTES, "app_settings_t should not exceed MOD_STORAGE_PAYLOAD_BYTES");
 
 app_settings_t app_settings = { 0 };
-
-#endif //HUMMER_APP_SETTINGS_T_H
