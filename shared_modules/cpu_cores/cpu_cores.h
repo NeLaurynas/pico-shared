@@ -50,7 +50,7 @@ void cpu_cores_init_from_core0();
 	hci_power_control(HCI_POWER_OFF);
 	cyw43_arch_deinit();
 */
-void cpu_cores_shutdown_from_core0();
+[[noreturn]] void cpu_cores_shutdown_from_core0();
 
 bool cpu_set_clock_khz(u32 freq_khz, bool required);
 

@@ -6,15 +6,19 @@
 #include <hardware/adc.h>
 #include <hardware/clocks.h>
 #include <hardware/dma.h>
+#include <hardware/gpio.h>
 #include <hardware/i2c.h>
 #include <hardware/irq.h>
 #include <hardware/pio.h>
+#include <hardware/powman.h>
 #include <hardware/pwm.h>
+#include <hardware/structs/scb.h>
+#include <hardware/sync.h>
 #include <hardware/uart.h>
-#include <hardware/xosc.h>
 #if defined(RASPBERRYPI_PICO2_W) && CYW43_PIO_CLOCK_DIV_DYNAMIC
 #include <pico/cyw43_driver.h>
 #endif
+#include <hardware/xosc.h>
 #include <pico/multicore.h>
 
 #include "shared_config.h"
@@ -217,6 +221,7 @@ void cpu_cores_send_shutdown_to_core0_from_core1() {
 	for (;;) tight_loop_contents();
 }
 
+[[noreturn]]
 void cpu_cores_shutdown_from_core0() {
 	// utils_printf("wifi and bt shutdown\n");
 	// hci_power_control(HCI_POWER_OFF);
@@ -239,14 +244,41 @@ void cpu_cores_shutdown_from_core0() {
 	uart_off_all();
 
 	utils_printf("gpio shutdown\n");
-	for (u16 i = 0; i < 30; ++i) {
+	for (u16 i = 0; i < NUM_BANK0_GPIOS; ++i) {
 		gpio_set_function(i, GPIO_FUNC_NULL);
+		gpio_set_input_enabled(i, false); // kill through-current on floating input buffers
 		gpio_disable_pulls(i);
 		gpio_set_dir(i, false);
 	}
 
+	// We never return and never want to wake without an external reset / power
+	// cycle, so mask everything and let the power manager physically remove power
+	// from the switched-core domain (both CPUs, bus fabric, peripherals, ROSC and
+	// the PLLs) plus the SRAM banks, and drop the core regulator to retention.
+	// That is far lower power than the old xosc_disable() trick, which only
+	// starved clk_sys while leaving all of that logic powered and leaking.
+	utils_printf("powering down switched core\n");
+	__dsb();
+	__isb();
+	(void)save_and_disable_interrupts();
+
+	powman_set_debug_power_request_ignored(true); // a connected debugger must not veto power-off
+	powman_disable_all_wakeups();
+
+	auto off = powman_get_power_state();
+	off = powman_power_state_with_domain_off(off, POWMAN_POWER_DOMAIN_SWITCHED_CORE);
+	off = powman_power_state_with_domain_off(off, POWMAN_POWER_DOMAIN_SRAM_BANK0);
+	off = powman_power_state_with_domain_off(off, POWMAN_POWER_DOMAIN_SRAM_BANK1);
+	// XIP cache is left powered: this loop still executes from flash until the
+	// WFI below actually removes power.
+
+	scb_hw->scr |= M33_SCR_SLEEPDEEP_BITS; // WFI -> deep sleep so powman can drop the domain
+	powman_set_power_state(off);
+
 	utils_printf("going to sleep (disabling clock)\n");
 	xosc_disable();
+
+	for (;;) __wfi();
 }
 
 bool cpu_set_clock_khz(const u32 freq_khz, const bool required) {

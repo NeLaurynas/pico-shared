@@ -215,10 +215,13 @@ target_link_libraries(pico_shared_cpu_cores
 			hardware_adc
 			hardware_clocks
 			hardware_dma
+			hardware_gpio
 			hardware_i2c
 			hardware_irq
 			hardware_pio
+			hardware_powman
 			hardware_pwm
+			hardware_sync
 			hardware_uart
 			hardware_xosc
 			pico_multicore
