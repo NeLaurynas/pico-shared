@@ -265,9 +265,9 @@ void cpu_init() {
 	inited = true;
 }
 
-float cpu_temp() {
+float cpu_temp(const bool print_result) {
 	if (unlikely(!inited)) {
-		utils_printf("cpu_temp - call cpu_init first!");
+		if (print_result) utils_printf("cpu_temp - call cpu_init first!");
 		return -1;
 	}
 	constexpr float conversionFactor = 3.3f / (1 << 12);
@@ -277,18 +277,18 @@ float cpu_temp() {
 	const float adc = (float)adc_read() * conversionFactor;
 	const float tempC = 27.0f - (adc - 0.706f) / 0.001721f;
 
-	utils_printf("Onboard temperature = %.02f C\n", tempC);
+	if (print_result) utils_printf("Onboard temperature = %.02f C\n", tempC);
 
 	return tempC;
 }
 
-void cpu_print_speed() {
-#if DBG
+float cpu_speed(const bool print_result) {
 	const auto freq_hz = clock_get_hz(clk_sys);
 
 	const float freq_mhz = (float)freq_hz / 1'000'000.0f;
-	printf("System clock: %.2f MHz\n", freq_mhz);
-#endif
+	if (print_result) utils_printf("System clock: %.2f MHz\n", freq_mhz);
+
+	return freq_mhz;
 }
 
 float cpu_calculate_load(const u32 actual_time, const u32 budget) {

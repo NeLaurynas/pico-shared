@@ -56,9 +56,9 @@ bool cpu_set_clock_khz(u32 freq_khz, bool required);
 
 void cpu_init();
 
-float cpu_temp();
+float cpu_temp(bool print_result);
 
-void cpu_print_speed();
+float cpu_speed(bool print_result);
 
 float cpu_calculate_load(u32 actual_time, u32 budget);
 
