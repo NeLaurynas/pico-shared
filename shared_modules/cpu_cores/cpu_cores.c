@@ -12,6 +12,9 @@
 #include <hardware/pwm.h>
 #include <hardware/uart.h>
 #include <hardware/xosc.h>
+#if defined(RASPBERRYPI_PICO2_W) && CYW43_PIO_CLOCK_DIV_DYNAMIC
+#include <pico/cyw43_driver.h>
+#endif
 #include <pico/multicore.h>
 
 #include "shared_config.h"
@@ -20,9 +23,37 @@
 queue_t mod_cpu_core0_queue;
 static bool inited = false;
 
+#if defined(RASPBERRYPI_PICO2_W) && !CYW43_PIO_CLOCK_DIV_DYNAMIC
+static_assert(false, "Pico 2 W clock setup requires CYW43_PIO_CLOCK_DIV_DYNAMIC=1");
+#endif
+
 #define CPU_PI_WORK_WORDS (((CPU_PI_MAX_DIGITS + 1u) * 10u / 3u) + 1u)
 
+#if defined(RASPBERRYPI_PICO2_W) && CYW43_PIO_CLOCK_DIV_DYNAMIC
+#define CPU_CYW43_TARGET_PIO_CLK_KHZ 75'000u
+#define CPU_CYW43_PIO_CLKDIV_FRAC_SCALE 0b1'0000'0000u
+#define CPU_CYW43_PIO_CLKDIV_FRAC_MASK  0b1111'1111u
+#endif
+
 static u16 cpu_pi_remainders[CPU_PI_WORK_WORDS];
+
+#if defined(RASPBERRYPI_PICO2_W) && CYW43_PIO_CLOCK_DIV_DYNAMIC
+static void set_cyw43_pio_clock_divisor(const u32 freq_khz) {
+	// 150 MHz clk_sys with the SDK default divider of 2 gives a 75 MHz PIO clock.
+	const auto raw_div_x256 =
+			(((u64)freq_khz * CPU_CYW43_PIO_CLKDIV_FRAC_SCALE) + (CPU_CYW43_TARGET_PIO_CLK_KHZ / 2u)) /
+			CPU_CYW43_TARGET_PIO_CLK_KHZ;
+	auto div_x256 = raw_div_x256;
+	if (div_x256 < CPU_CYW43_PIO_CLKDIV_FRAC_SCALE) {
+		div_x256 = CPU_CYW43_PIO_CLKDIV_FRAC_SCALE;
+	}
+
+	const auto div_int = (u16)(div_x256 / CPU_CYW43_PIO_CLKDIV_FRAC_SCALE);
+	const auto div_frac8 = (u8)(div_x256 & CPU_CYW43_PIO_CLKDIV_FRAC_MASK);
+
+	cyw43_set_pio_clock_divisor(div_int, div_frac8);
+}
+#endif
 
 static bool cpu_pi_emit_digit(
 		char *out,
@@ -216,6 +247,16 @@ void cpu_cores_shutdown_from_core0() {
 
 	utils_printf("going to sleep (disabling clock)\n");
 	xosc_disable();
+}
+
+bool cpu_set_clock_khz(const u32 freq_khz, const bool required) {
+	const bool result = set_sys_clock_khz(freq_khz, required);
+
+#if defined(RASPBERRYPI_PICO2_W) && CYW43_PIO_CLOCK_DIV_DYNAMIC
+	if (result) set_cyw43_pio_clock_divisor(freq_khz);
+#endif
+
+	return result;
 }
 
 void cpu_init() {

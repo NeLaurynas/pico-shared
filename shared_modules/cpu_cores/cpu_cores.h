@@ -52,6 +52,8 @@ void cpu_cores_init_from_core0();
 */
 void cpu_cores_shutdown_from_core0();
 
+bool cpu_set_clock_khz(u32 freq_khz, bool required);
+
 void cpu_init();
 
 float cpu_temp();

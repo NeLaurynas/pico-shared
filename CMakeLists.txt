@@ -224,6 +224,14 @@ target_link_libraries(pico_shared_cpu_cores
 			pico_multicore
 			pico_shared_utils
 )
+if (PICO_BOARD STREQUAL "pico2_w" AND TARGET pico_cyw43_driver_headers)
+	target_compile_definitions(pico_shared_cpu_cores PUBLIC
+			CYW43_PIO_CLOCK_DIV_DYNAMIC=1
+	)
+	target_link_libraries(pico_shared_cpu_cores PRIVATE
+			pico_cyw43_driver_headers
+	)
+endif ()
 
 pico_shared_add_library(pico_shared_mp3
 		shared_modules/mp3/mp3.c
