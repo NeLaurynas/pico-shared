@@ -20,7 +20,16 @@
 
 static bool crc_init = false;
 static u32 *crc_tab;
+static bool internal_led_init = false;
+static bool internal_led_unavailable = false;
+static bool in_error_mode = false;
 static atomic_flag utils_printf_lock = ATOMIC_FLAG_INIT;
+
+#if PICO_STATUS_LED_AVAILABLE && defined(CYW43_WL_GPIO_LED_PIN) && !defined(PICO_DEFAULT_LED_PIN)
+#define UTILS_INTERNAL_LED_NEEDS_CONTEXT 1
+#else
+#define UTILS_INTERNAL_LED_NEEDS_CONTEXT 0
+#endif
 
 void __attribute__((weak)) utils_printf_sink(const char *text, const size_t len) {
 	(void)text;
@@ -110,6 +119,11 @@ inline i32 utils_time_after_us(const u32 time, const u32 target_time) {
 }
 
 [[noreturn]] void utils_error_mode(const i32 code) {
+	if (in_error_mode) {
+		while (true) sleep_ms(5'000);
+	}
+	in_error_mode = true;
+
 	utils_internal_led(false);
 	const i32 long_blink = code / 10;
 	const i32 short_blink = code % 10;
@@ -120,21 +134,43 @@ inline i32 utils_time_after_us(const u32 time, const u32 target_time) {
 			utils_internal_led(true);
 			sleep_ms(500);
 			utils_internal_led(false);
-			sleep_ms(500);
+			sleep_ms(400);
 		}
 		sleep_ms(400);
 		for (auto i = 0; i < short_blink; i++) {
 			utils_internal_led(true);
-			sleep_ms(75);
+			sleep_ms(100);
 			utils_internal_led(false);
-			sleep_ms(700);
+			sleep_ms(400);
 		}
 		sleep_ms(3'000); // sleep for 3 seconds
 	}
 }
 
 void utils_internal_led(const bool on) {
-	status_led_set_state(on);
+	if (!internal_led_init && !utils_internal_led_init(nullptr)) return;
+	(void)status_led_set_state(on);
+}
+
+bool utils_internal_led_init(struct async_context *context) {
+	if (internal_led_init) return true;
+	if (internal_led_unavailable) return false;
+
+#if UTILS_INTERNAL_LED_NEEDS_CONTEXT
+	if (context == nullptr) return false;
+	internal_led_init = status_led_init_with_context(context);
+#else
+	(void)context;
+	internal_led_init = status_led_init();
+#endif
+
+	if (!internal_led_init) {
+		internal_led_unavailable = true;
+		return false;
+	}
+
+	(void)status_led_set_state(false);
+	return true;
 }
 
 i32 utils_proportional_reduce(const i32 number, i32 step, const i32 total_steps, const bool invert) {

@@ -8,6 +8,8 @@
 
 #include "shared_config.h"
 
+struct async_context;
+
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0])) // will not work for decayed arrays
 
 #define DMA_IRQ(irq) (irq == 0 ? DMA_IRQ_0 : DMA_IRQ_1)
@@ -245,9 +247,10 @@ i32 utils_time_after_us(const u32 time, const u32 target_time);
 [[noreturn]] void utils_error_mode(const i32 code);
 
 /**
- * @attention Call \c status_led_init(); before use
- * @warning Unless you init cyw43 arch manually and in poll or w/e. It's fucky.
+ * @attention Pass the app async context on Pico W / Pico 2 W after \c cyw43_arch_init.
  */
+bool utils_internal_led_init(struct async_context *context);
+
 void utils_internal_led(const bool on);
 
 i32 utils_proportional_reduce(const i32 number, i32 step, const i32 total_steps, const bool invert);
