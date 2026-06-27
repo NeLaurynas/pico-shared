@@ -20,31 +20,24 @@ void v_monitor_init() {
 	adc_select_input(MOD_VMON_ADC);
 }
 
-void v_monitor_anim() {
-	static constexpr i32 TICKS = 20; // every 100 or 200 ms
-	static i32 frame = 0;
+void v_monitor_sample(const bool select_input) {
 	static i32 idx = 0;
 
-	if (frame == 0) {
-		samples[idx] = adc_read();
+	if (select_input) adc_select_input(MOD_VMON_ADC);
+	samples[idx] = adc_read();
 
-		idx = (idx + 1) % SAMPLE_COUNT;
-		if (unlikely(sample_count < SAMPLE_COUNT)) sample_count++;
-	}
-
-	frame = (frame + 1) % TICKS;
+	idx = (idx + 1) % SAMPLE_COUNT;
+	if (unlikely(sample_count < SAMPLE_COUNT)) sample_count++;
 }
 
-float v_monitor_voltage(const bool select_input) {
-	if (select_input) adc_select_input(MOD_VMON_ADC);
-
-	if (unlikely(sample_count < SAMPLE_COUNT)) return MOD_VMON_DEFAULT_REF;
+float v_monitor_voltage(const bool print_result) {
+	if (unlikely(sample_count == 0)) return MOD_VMON_DEFAULT_REF;
 
 	float const raw = utils_avg(samples, sample_count);
 	float const v_out = raw * ADC_FACTOR;
 	float const v_in = v_out * (MOD_VMON_RES_POS + MOD_VMON_RES_NEG) / MOD_VMON_RES_NEG;
 
-	utils_printf("battery: %2.2f V (sample count: %d)\n", v_in, sample_count);
+	if (print_result) utils_printf("battery: %2.2f V (sample count: %d)\n", v_in, sample_count);
 
 	return v_in;
 }

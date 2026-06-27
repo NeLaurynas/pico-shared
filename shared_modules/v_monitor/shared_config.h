@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../../shared_config.h"
+#include <shared_config.h>
 
 #ifndef MOD_VMON_RES_POS
 #define MOD_VMON_RES_POS            300000.0f

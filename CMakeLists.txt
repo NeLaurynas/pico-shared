@@ -74,6 +74,11 @@ target_link_options(pico_shared_options INTERFACE
 )
 
 add_library(pico_shared_config INTERFACE)
+if (DEFINED PICO_SHARED_PROJECT_CONFIG_DIR)
+	target_include_directories(pico_shared_config INTERFACE
+			"${PICO_SHARED_PROJECT_CONFIG_DIR}"
+	)
+endif ()
 target_include_directories(pico_shared_config INTERFACE
 		"${CMAKE_CURRENT_LIST_DIR}"
 )

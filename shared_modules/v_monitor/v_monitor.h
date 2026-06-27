@@ -5,6 +5,6 @@
 
 void v_monitor_init();
 
-void v_monitor_anim();
+void v_monitor_sample(bool select_input);
 
-float v_monitor_voltage(const bool select_input);
+float v_monitor_voltage(bool print_result);
