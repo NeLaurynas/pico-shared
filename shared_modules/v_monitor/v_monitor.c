@@ -37,7 +37,7 @@ float v_monitor_voltage(const bool print_result) {
 	float const v_out = raw * ADC_FACTOR;
 	float const v_in = v_out * (MOD_VMON_RES_POS + MOD_VMON_RES_NEG) / MOD_VMON_RES_NEG;
 
-	if (print_result) utils_printf("battery: %2.2f V (sample count: %d)\n", v_in, sample_count);
+	if (print_result) utils_printf("battery: %2.3f V (sample count: %d)\n", v_in, sample_count);
 
 	return v_in;
 }
