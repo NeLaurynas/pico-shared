@@ -3,9 +3,8 @@
 
 #pragma once
 
+#include <../../shared_config.h>
 #include <hardware/i2c.h>
-
-#include "../../shared_config.h"
 
 #ifndef MOD_MCP_PIN_SDA
 #define MOD_MCP_PIN_SDA             16

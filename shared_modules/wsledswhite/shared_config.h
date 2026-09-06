@@ -3,9 +3,8 @@
 
 #pragma once
 
+#include <../../shared_config.h>
 #include <hardware/pio.h>
-
-#include "../../shared_config.h"
 
 #ifndef MOD_WSLEDS_LED_COUNT
 #define MOD_WSLEDS_LED_COUNT        64

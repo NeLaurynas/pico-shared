@@ -3,10 +3,9 @@
 
 #pragma once
 
+#include <pico/util/queue.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include <pico/util/queue.h>
 
 #include "shared_config.h"
 

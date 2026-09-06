@@ -15,6 +15,7 @@
 #include <hardware/structs/scb.h>
 #include <hardware/sync.h>
 #include <hardware/uart.h>
+
 #if defined(RASPBERRYPI_PICO2_W) && CYW43_PIO_CLOCK_DIV_DYNAMIC
 #include <pico/cyw43_driver.h>
 #endif

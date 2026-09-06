@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../../shared_config.h"
+#include <../../shared_config.h>
 
 #ifndef MOD_MP3_PIN
 #define MOD_MP3_PIN                 15

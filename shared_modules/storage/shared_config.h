@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../../shared_config.h"
+#include <../../shared_config.h>
 
 #ifndef PICO_FLASH_SIZE_BYTES
 #define PICO_FLASH_SIZE_BYTES       4194304u
