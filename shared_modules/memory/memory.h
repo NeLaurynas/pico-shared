@@ -11,3 +11,12 @@
  * @return Size in bytes
  */
 size_t memory_remaining_heap(bool print_result);
+
+/**
+ * @brief Free heap without probing it by allocating.
+ * @note Safe while another task or core allocates, unlike memory_remaining_heap,
+ * whose malloc/free binary search can transiently exhaust the heap and make a
+ * concurrent malloc (such as a wslay network frame) fail.
+ * @return Size in bytes
+ */
+size_t memory_free_heap();

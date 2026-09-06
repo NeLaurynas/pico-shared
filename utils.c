@@ -6,11 +6,11 @@
 #include <hardware/adc.h>
 #include <hardware/clocks.h>
 #include <hardware/pwm.h>
+#include <pico/mutex.h>
 #include <pico/rand.h>
 #include <pico/status_led.h>
 #include <pico/time.h>
 #include <stdarg.h>
-#include <stdatomic.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -23,7 +23,7 @@ static u32 *crc_tab;
 static bool internal_led_init = false;
 static bool internal_led_unavailable = false;
 static bool in_error_mode = false;
-static atomic_flag utils_printf_lock = ATOMIC_FLAG_INIT;
+auto_init_mutex(utils_printf_lock);
 
 #if PICO_STATUS_LED_AVAILABLE && defined(CYW43_WL_GPIO_LED_PIN) && !defined(PICO_DEFAULT_LED_PIN)
 #define UTILS_INTERNAL_LED_NEEDS_CONTEXT 1
@@ -40,7 +40,9 @@ void utils_printf_impl(const char *format, ...) {
 	static char buffer[512];
 
 	if (format == nullptr) return;
-	if (atomic_flag_test_and_set_explicit(&utils_printf_lock, memory_order_acquire)) return;
+	if (__get_current_exception() == 0) {
+		mutex_enter_blocking(&utils_printf_lock);
+	} else if (!mutex_try_enter(&utils_printf_lock, nullptr)) return;
 
 	va_list args;
 	va_start(args, format);
@@ -55,7 +57,7 @@ void utils_printf_impl(const char *format, ...) {
 		utils_printf_sink(buffer, len);
 	}
 
-	atomic_flag_clear_explicit(&utils_printf_lock, memory_order_release);
+	mutex_exit(&utils_printf_lock);
 }
 
 u32 utils_random_in_range(u32 from_inclusive, u32 to_inclusive) {

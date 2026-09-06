@@ -30,6 +30,10 @@ static inline size_t free_heap() {
 	return total_heap() - used_heap();
 }
 
+size_t memory_free_heap() {
+	return free_heap();
+}
+
 size_t memory_remaining_heap(const bool print_result) {
 	size_t lo = 0, hi = free_heap();
 
