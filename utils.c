@@ -16,10 +16,9 @@
 #include <string.h>
 
 #include "shared_config.h"
-#include "shared_modules/memory/memory.h"
 
 static bool crc_init = false;
-static u32 *crc_tab;
+static u32 crc_tab[256];
 static bool internal_led_init = false;
 static bool internal_led_unavailable = false;
 static bool in_error_mode = false;
@@ -212,12 +211,6 @@ void utils_print_time_elapsed(const char *title, const u32 start_us) {
 void utils_crc_init() {
 	if (crc_init) return;
 
-	crc_tab = malloc(256 * sizeof *crc_tab);
-	if (crc_tab == nullptr) {
-		utils_printf("!!! Couldn't allocate memory for crc tab (free memory: %zu kB)\n", memory_remaining_heap(true) / 1024);
-		return;
-	}
-
 	for (u32 i = 0; i < 256; i++) {
 		u32 c = i;
 		for (int k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320u ^ (c >> 1)) : (c >> 1);
@@ -228,10 +221,7 @@ void utils_crc_init() {
 }
 
 u32 utils_crc(const void *data, const size_t len) {
-	if (unlikely(!crc_init)) {
-		utils_printf("!!! Call utils_crc_init first!\n");
-		return 0;
-	}
+	if (unlikely(!crc_init)) utils_crc_init();
 
 	const u8 *p = data;
 	u32 c = 0xFFFFFFFFu;
