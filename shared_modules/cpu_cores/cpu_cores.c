@@ -15,6 +15,7 @@
 #include <hardware/structs/scb.h>
 #include <hardware/sync.h>
 #include <hardware/uart.h>
+#include <pico/mutex.h>
 
 #if defined(RASPBERRYPI_PICO2_W) && CYW43_PIO_CLOCK_DIV_DYNAMIC
 #include <pico/cyw43_driver.h>
@@ -27,6 +28,7 @@
 
 queue_t mod_cpu_core0_queue;
 static bool inited = false;
+auto_init_mutex(cpu_adc_mutex);
 
 #if defined(RASPBERRYPI_PICO2_W) && !CYW43_PIO_CLOCK_DIV_DYNAMIC
 static_assert(false, "Pico 2 W clock setup requires CYW43_PIO_CLOCK_DIV_DYNAMIC=1");
@@ -298,6 +300,15 @@ void cpu_init() {
 	inited = true;
 }
 
+// ADC input selection and conversion are shared with ADC controls, so serialize them.
+u16 cpu_adc_read(const u8 channel) {
+	mutex_enter_blocking(&cpu_adc_mutex);
+	adc_select_input(channel);
+	const u16 value = adc_read();
+	mutex_exit(&cpu_adc_mutex);
+	return value;
+}
+
 float cpu_temp(const bool print_result) {
 	if (unlikely(!inited)) {
 		if (print_result) utils_printf("cpu_temp - call cpu_init first!");
@@ -305,9 +316,7 @@ float cpu_temp(const bool print_result) {
 	}
 	constexpr float conversionFactor = 3.3f / (1 << 12);
 
-	adc_select_input(4);
-
-	const float adc = (float)adc_read() * conversionFactor;
+	const float adc = (float)cpu_adc_read(4) * conversionFactor;
 	const float tempC = 27.0f - (adc - 0.706f) / 0.001721f;
 
 	if (print_result) utils_printf("Onboard temperature = %.02f C\n", tempC);

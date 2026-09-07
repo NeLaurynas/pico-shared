@@ -55,6 +55,8 @@ bool cpu_set_clock_khz(u32 freq_khz, bool required);
 
 void cpu_init();
 
+u16 cpu_adc_read(u8 channel);
+
 float cpu_temp(bool print_result);
 
 float cpu_speed(bool print_result);
