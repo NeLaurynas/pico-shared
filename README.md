@@ -12,4 +12,6 @@ This is the only library under `projects/phobos/lib/` that Vesta treats as “ow
 ## How it’s used
 Phobos pulls this library in via CMake (`projects/phobos/src/CMakeLists.txt`) using `add_subdirectory(...)` and links it into the firmware image.
 
+`PICO_SHARED_PROJECT_CONFIG_DIR` selects the project's `shared_config.h`; otherwise the library's defaults apply. `PICO_SHARED_CPU_EXTRAS` defaults to `ON` and includes the CPU shutdown and calculation APIs. Phobos sets it to `OFF`, retaining clock, ADC and temperature helpers.
+
 The library can also be configured standalone (it will import the Pico SDK when configured directly), but the normal workflow is to build it as part of the Phobos build.

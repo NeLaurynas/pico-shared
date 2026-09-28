@@ -75,6 +75,9 @@ target_link_options(pico_shared_options INTERFACE
 
 add_library(pico_shared_config INTERFACE)
 if (DEFINED PICO_SHARED_PROJECT_CONFIG_DIR)
+	target_compile_definitions(pico_shared_config INTERFACE
+			PICO_SHARED_PROJECT_CONFIG_HEADER="${PICO_SHARED_PROJECT_CONFIG_DIR}/shared_config.h"
+	)
 	target_include_directories(pico_shared_config INTERFACE
 			"${PICO_SHARED_PROJECT_CONFIG_DIR}"
 	)
@@ -219,6 +222,12 @@ target_link_libraries(pico_shared_cpu_cores
 		PRIVATE
 			hardware_adc
 			hardware_clocks
+			pico_shared_utils
+)
+option(PICO_SHARED_CPU_EXTRAS "Build CPU shutdown and calculation helpers" ON)
+if (PICO_SHARED_CPU_EXTRAS)
+	target_sources(pico_shared_cpu_cores PRIVATE shared_modules/cpu_cores/cpu_extras.c)
+	target_link_libraries(pico_shared_cpu_cores PRIVATE
 			hardware_dma
 			hardware_gpio
 			hardware_i2c
@@ -230,8 +239,8 @@ target_link_libraries(pico_shared_cpu_cores
 			hardware_uart
 			hardware_xosc
 			pico_multicore
-			pico_shared_utils
-)
+	)
+endif ()
 if (PICO_BOARD STREQUAL "pico2_w" AND TARGET pico_cyw43_driver_headers)
 	target_compile_definitions(pico_shared_cpu_cores PUBLIC
 			CYW43_PIO_CLOCK_DIV_DYNAMIC=1

@@ -4,6 +4,9 @@
 #pragma once
 
 #include <stddef.h>
+#include <stdint.h>
+
+uint32_t frtos_runtime_counter();
 
 /**
  * Returns per-core CPU busy percentages since the previous sample.

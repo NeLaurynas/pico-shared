@@ -5,28 +5,15 @@
 
 #include <hardware/adc.h>
 #include <hardware/clocks.h>
-#include <hardware/dma.h>
-#include <hardware/gpio.h>
-#include <hardware/i2c.h>
-#include <hardware/irq.h>
-#include <hardware/pio.h>
-#include <hardware/powman.h>
-#include <hardware/pwm.h>
-#include <hardware/structs/scb.h>
-#include <hardware/sync.h>
-#include <hardware/uart.h>
 #include <pico/mutex.h>
 
 #if defined(RASPBERRYPI_PICO2_W) && CYW43_PIO_CLOCK_DIV_DYNAMIC
 #include <pico/cyw43_driver.h>
 #endif
-#include <hardware/xosc.h>
-#include <pico/multicore.h>
 
 #include "shared_config.h"
 #include "utils.h"
 
-queue_t mod_cpu_core0_queue;
 static bool inited = false;
 auto_init_mutex(cpu_adc_mutex);
 
@@ -34,15 +21,11 @@ auto_init_mutex(cpu_adc_mutex);
 static_assert(false, "Pico 2 W clock setup requires CYW43_PIO_CLOCK_DIV_DYNAMIC=1");
 #endif
 
-#define CPU_PI_WORK_WORDS (((CPU_PI_MAX_DIGITS + 1u) * 10u / 3u) + 1u)
-
 #if defined(RASPBERRYPI_PICO2_W) && CYW43_PIO_CLOCK_DIV_DYNAMIC
 #define CPU_CYW43_TARGET_PIO_CLK_KHZ 75'000u
 #define CPU_CYW43_PIO_CLKDIV_FRAC_SCALE 0b1'0000'0000u
 #define CPU_CYW43_PIO_CLKDIV_FRAC_MASK  0b1111'1111u
 #endif
-
-static u16 cpu_pi_remainders[CPU_PI_WORK_WORDS];
 
 #if defined(RASPBERRYPI_PICO2_W) && CYW43_PIO_CLOCK_DIV_DYNAMIC
 static void set_cyw43_pio_clock_divisor(const u32 freq_khz) {
@@ -61,228 +44,6 @@ static void set_cyw43_pio_clock_divisor(const u32 freq_khz) {
 	cyw43_set_pio_clock_divisor(div_int, div_frac8);
 }
 #endif
-
-static bool cpu_pi_emit_digit(
-		char *out,
-		const size_t out_len,
-		size_t *out_index,
-		u32 *raw_index,
-		const u32 digit
-) {
-	if (digit > 9) return false;
-
-	if (*raw_index > 0) {
-		const u32 pi_digit_index = *raw_index - 1u;
-		if (pi_digit_index == 1u) {
-			if (*out_index + 1u >= out_len) return false;
-			out[(*out_index)++] = '.';
-		}
-
-		if (*out_index + 1u >= out_len) return false;
-		out[(*out_index)++] = (char)('0' + digit);
-	}
-
-	(*raw_index)++;
-	return true;
-}
-
-static inline void pwm_off_all() {
-	for (u16 s = 0; s < NUM_PWM_SLICES; s++) pwm_set_enabled(s, false);
-#ifdef RESETS_RESET_PWM_BITS
-	reset_block(RESETS_RESET_PWM_BITS);
-#endif
-}
-
-static inline void pio_off_all() {
-#if NUM_PIOS >= 1
-	pio_set_sm_mask_enabled(pio0, 0b1111, false);
-	pio_clear_instruction_memory(pio0);
-#endif
-#if NUM_PIOS >= 2
-	pio_set_sm_mask_enabled(pio1, 0b1111, false);
-	pio_clear_instruction_memory(pio1);
-#endif
-#if NUM_PIOS >= 3
-	pio_set_sm_mask_enabled(pio2, 0b1111, false);
-	pio_clear_instruction_memory(pio2);
-#endif
-#if NUM_PIOS >= 4
-	pio_set_sm_mask_enabled(pio3, 0b1111, false);
-	pio_clear_instruction_memory(pio3);
-#endif
-
-#ifdef RESETS_RESET_PIO0_BITS
-	reset_block(RESETS_RESET_PIO0_BITS);
-#endif
-#ifdef RESETS_RESET_PIO1_BITS
-	reset_block(RESETS_RESET_PIO1_BITS);
-#endif
-#ifdef RESETS_RESET_PIO2_BITS
-	reset_block(RESETS_RESET_PIO2_BITS);
-#endif
-#ifdef RESETS_RESET_PIO3_BITS
-	reset_block(RESETS_RESET_PIO3_BITS);
-#endif
-}
-
-static inline void dma_off_all() {
-	for (u16 ch = 0; ch < NUM_DMA_CHANNELS; ch++) {
-		dma_channel_abort(ch);
-	}
-#ifdef DMA_IRQ_0
-	irq_set_enabled(DMA_IRQ_0, false);
-#endif
-#ifdef DMA_IRQ_1
-	irq_set_enabled(DMA_IRQ_1, false);
-#endif
-	if (dma_hw) {
-		dma_hw->inte0 = 0;
-		dma_hw->inte1 = 0;
-	}
-
-#ifdef RESETS_RESET_DMA_BITS
-	reset_block(RESETS_RESET_DMA_BITS); // gate DMA engine
-#endif
-}
-
-static inline void adc_off_all() {
-	adc_set_temp_sensor_enabled(false);
-	adc_run(false);
-#ifdef ADC_IRQ_FIFO
-	irq_set_enabled(ADC_IRQ_FIFO, false);
-#endif
-#ifdef RESETS_RESET_ADC_BITS
-	reset_block(RESETS_RESET_ADC_BITS);
-#endif
-}
-
-static inline void i2c_off_all() {
-#ifdef i2c0
-	i2c_deinit(i2c0);
-#endif
-#ifdef i2c1
-	i2c_deinit(i2c1);
-#endif
-#ifdef i2c2
-	i2c_deinit(i2c2);
-#endif
-#ifdef i2c3
-	i2c_deinit(i2c3);
-#endif
-#ifdef RESETS_RESET_I2C0_BITS
-	reset_block(RESETS_RESET_I2C0_BITS);
-#endif
-#ifdef RESETS_RESET_I2C1_BITS
-	reset_block(RESETS_RESET_I2C1_BITS);
-#endif
-#ifdef RESETS_RESET_I2C2_BITS
-	reset_block(RESETS_RESET_I2C2_BITS);
-#endif
-#ifdef RESETS_RESET_I2C3_BITS
-	reset_block(RESETS_RESET_I2C3_BITS);
-#endif
-}
-
-static inline void uart_off_all() {
-#ifdef uart0
-	uart_deinit(uart0);
-#endif
-#ifdef uart1
-	uart_deinit(uart1);
-#endif
-#ifdef uart2
-	uart_deinit(uart2);
-#endif
-#ifdef uart3
-	uart_deinit(uart3);
-#endif
-#ifdef RESETS_RESET_UART0_BITS
-	reset_block(RESETS_RESET_UART0_BITS);
-#endif
-#ifdef RESETS_RESET_UART1_BITS
-	reset_block(RESETS_RESET_UART1_BITS);
-#endif
-#ifdef RESETS_RESET_UART2_BITS
-	reset_block(RESETS_RESET_UART2_BITS);
-#endif
-#ifdef RESETS_RESET_UART3_BITS
-	reset_block(RESETS_RESET_UART3_BITS);
-#endif
-}
-
-void cpu_cores_init_from_core0() {
-	queue_init(&mod_cpu_core0_queue, sizeof(mod_cores_cmd_t), 1);
-}
-
-[[noreturn]]
-void cpu_cores_send_shutdown_to_core0_from_core1() {
-	const mod_cores_cmd_t cmd = CPU_CORES_CMD_SHUTDOWN;
-	utils_printf("sending shutdown cmd to core0\n");
-	queue_add_blocking(&mod_cpu_core0_queue, &cmd); // this copies, doesn't just passes address
-
-	utils_printf("core1 entering loop to prevent instruction execution; core0 will later shut it down\n");
-	for (;;) tight_loop_contents();
-}
-
-[[noreturn]]
-void cpu_cores_shutdown_from_core0() {
-	// utils_printf("wifi and bt shutdown\n");
-	// hci_power_control(HCI_POWER_OFF);
-	// cyw43_arch_deinit();
-
-	utils_printf("core1 shutdown\n");
-	multicore_reset_core1();
-
-	utils_printf("pwm shutdown\n");
-	pwm_off_all();
-	utils_printf("pio shutdown\n");
-	pio_off_all();
-	utils_printf("dma shutdown\n");
-	dma_off_all();
-	utils_printf("adc shutdown\n");
-	adc_off_all();
-	utils_printf("i2c shutdown\n");
-	i2c_off_all();
-	utils_printf("uart shutdown\n");
-	uart_off_all();
-
-	utils_printf("gpio shutdown\n");
-	for (u16 i = 0; i < NUM_BANK0_GPIOS; ++i) {
-		gpio_set_function(i, GPIO_FUNC_NULL);
-		gpio_set_input_enabled(i, false); // kill through-current on floating input buffers
-		gpio_disable_pulls(i);
-		gpio_set_dir(i, false);
-	}
-
-	// We never return and never want to wake without an external reset / power
-	// cycle, so mask everything and let the power manager physically remove power
-	// from the switched-core domain (both CPUs, bus fabric, peripherals, ROSC and
-	// the PLLs) plus the SRAM banks, and drop the core regulator to retention.
-	// That is far lower power than the old xosc_disable() trick, which only
-	// starved clk_sys while leaving all of that logic powered and leaking.
-	utils_printf("powering down switched core\n");
-	__dsb();
-	__isb();
-	(void)save_and_disable_interrupts();
-
-	powman_set_debug_power_request_ignored(true); // a connected debugger must not veto power-off
-	powman_disable_all_wakeups();
-
-	auto off = powman_get_power_state();
-	off = powman_power_state_with_domain_off(off, POWMAN_POWER_DOMAIN_SWITCHED_CORE);
-	off = powman_power_state_with_domain_off(off, POWMAN_POWER_DOMAIN_SRAM_BANK0);
-	off = powman_power_state_with_domain_off(off, POWMAN_POWER_DOMAIN_SRAM_BANK1);
-	// XIP cache is left powered: this loop still executes from flash until the
-	// WFI below actually removes power.
-
-	scb_hw->scr |= M33_SCR_SLEEPDEEP_BITS; // WFI -> deep sleep so powman can drop the domain
-	powman_set_power_state(off);
-
-	utils_printf("going to sleep (disabling clock)\n");
-	xosc_disable();
-
-	for (;;) __wfi();
-}
 
 bool cpu_set_clock_khz(const u32 freq_khz, const bool required) {
 	const bool result = set_sys_clock_khz(freq_khz, required);
@@ -331,75 +92,4 @@ float cpu_speed(const bool print_result) {
 	if (print_result) utils_printf("System clock: %.2f MHz\n", freq_mhz);
 
 	return freq_mhz;
-}
-
-float cpu_calculate_load(const u32 actual_time, const u32 budget) {
-	if (budget == 0)
-		return actual_time ? 100.f : 0.f;
-
-	return ((float)actual_time * 100.f) / (float)budget;
-}
-
-bool cpu_calculate_pi(const u32 digits, char *out, const size_t out_len) {
-	if (out == nullptr) return false;
-	if (digits > CPU_PI_MAX_DIGITS) return false;
-
-	const size_t required_len = digits == 0 ? 2u : (size_t)digits + 3u;
-	if (out_len < required_len) return false;
-
-	const u32 emitted_pi_digits = digits + 1u;
-	const u32 work_words = (emitted_pi_digits * 10u / 3u) + 1u;
-
-	for (u32 i = 0; i < work_words; i++) cpu_pi_remainders[i] = 2u;
-
-	u32 held_digit = 0;
-	u32 held_nines = 0;
-	u32 raw_index = 0;
-	size_t out_index = 0;
-
-	for (u32 digit_index = 0; digit_index < emitted_pi_digits; digit_index++) {
-		u32 carry = 0;
-
-		for (u32 i = work_words; i > 0; i--) {
-			const u32 denominator = (2u * i) - 1u;
-			const u32 value = (cpu_pi_remainders[i - 1u] * 10u) + (carry * i);
-			cpu_pi_remainders[i - 1u] = (u16)(value % denominator);
-			carry = value / denominator;
-		}
-
-		cpu_pi_remainders[0] = (u16)(carry % 10u);
-		carry /= 10u;
-
-		if (carry == 9u) {
-			held_nines++;
-		} else if (carry == 10u) {
-			if (!cpu_pi_emit_digit(out, out_len, &out_index, &raw_index, held_digit + 1u)) return false;
-			while (held_nines > 0) {
-				if (!cpu_pi_emit_digit(out, out_len, &out_index, &raw_index, 0u)) return false;
-				held_nines--;
-			}
-			held_digit = 0;
-		} else {
-			if (!cpu_pi_emit_digit(out, out_len, &out_index, &raw_index, held_digit)) return false;
-			held_digit = carry;
-			while (held_nines > 0) {
-				if (!cpu_pi_emit_digit(out, out_len, &out_index, &raw_index, 9u)) return false;
-				held_nines--;
-			}
-		}
-	}
-
-	if (!cpu_pi_emit_digit(out, out_len, &out_index, &raw_index, held_digit)) return false;
-	out[out_index] = '\0';
-	return true;
-}
-
-void cpu_store_load(const float load, float *loads, const size_t loads_len, u8 *index) {
-	if (unlikely(loads_len == 0)) {
-		utils_printf("cpu_store_load -> loads_len == 0");
-		return;
-	}
-
-	loads[*index] = load;
-	*index = (*index + 1) % loads_len;
 }

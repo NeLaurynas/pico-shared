@@ -3,6 +3,10 @@
 
 #pragma once
 
+#ifdef PICO_SHARED_PROJECT_CONFIG_HEADER
+#include PICO_SHARED_PROJECT_CONFIG_HEADER
+#else
+
 #include <stdint.h>
 
 typedef uint32_t u32;
@@ -21,4 +25,6 @@ typedef uint64_t u64;
 
 #ifndef DBG
 #define DBG 1
+#endif
+
 #endif
