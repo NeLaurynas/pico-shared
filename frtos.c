@@ -24,8 +24,6 @@ static float clamp_percent(const float value) {
 }
 
 void frtos_cpu_usage_reset() {
-	previous_total_time = 0;
-	for (size_t i = 0; i < configNUMBER_OF_CORES; i++) previous_idle_time[i] = 0;
 	has_previous_sample = false;
 }
 
@@ -48,29 +46,23 @@ bool frtos_cpu_usage_percent_per_core(float *out_percent, const size_t core_coun
 	}
 
 	const configRUN_TIME_COUNTER_TYPE total_time = (configRUN_TIME_COUNTER_TYPE)portGET_RUN_TIME_COUNTER_VALUE();
-	configRUN_TIME_COUNTER_TYPE idle_time[configNUMBER_OF_CORES];
-	for (size_t i = 0; i < configNUMBER_OF_CORES; i++) idle_time[i] = idle_runtime_counter(i);
-
-	if (!has_previous_sample) {
-		previous_total_time = total_time;
-		for (size_t i = 0; i < configNUMBER_OF_CORES; i++) previous_idle_time[i] = idle_time[i];
-		has_previous_sample = true;
-		return false;
-	}
-
 	const configRUN_TIME_COUNTER_TYPE total_delta = total_time - previous_total_time;
+	// Every call advances the sample window; the first one after a reset only primes it.
+	const bool valid = has_previous_sample && total_delta != 0;
 	previous_total_time = total_time;
+	has_previous_sample = true;
 
 	for (size_t i = 0; i < configNUMBER_OF_CORES; i++) {
-		const configRUN_TIME_COUNTER_TYPE idle_delta = idle_time[i] - previous_idle_time[i];
-		previous_idle_time[i] = idle_time[i];
-		if (i >= core_count || total_delta == 0) continue;
+		const auto idle_time = idle_runtime_counter(i);
+		const configRUN_TIME_COUNTER_TYPE idle_delta = idle_time - previous_idle_time[i];
+		previous_idle_time[i] = idle_time;
+		if (i >= core_count || !valid) continue;
 
 		const float idle_percent = clamp_percent(((float)idle_delta * 100.0f) / (float)total_delta);
-		out_percent[i] = clamp_percent(100.0f - idle_percent);
+		out_percent[i] = 100.0f - idle_percent;
 	}
 
-	return total_delta != 0;
+	return valid;
 }
 
 bool frtos_cpu_usage_percent(float *out_percent) {
