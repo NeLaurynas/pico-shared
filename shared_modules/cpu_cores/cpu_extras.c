@@ -1,5 +1,3 @@
-#include "cpu_cores.h"
-
 #include <hardware/adc.h>
 #include <hardware/dma.h>
 #include <hardware/gpio.h>
@@ -14,6 +12,7 @@
 #include <hardware/xosc.h>
 #include <pico/multicore.h>
 
+#include "cpu_cores.h"
 #include "utils.h"
 
 #define CPU_PI_WORK_WORDS (((CPU_PI_MAX_DIGITS + 1u) * 10u / 3u) + 1u)
