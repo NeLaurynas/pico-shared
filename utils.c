@@ -244,36 +244,3 @@ void utils_generate_id(char *dst, const size_t len) {
 	dst[n] = '\0';
 	utils_printf("len=%zu, id=%s\n", n, dst);
 }
-
-void utils_base64_encode(const u8 *input, const size_t len, char *output, const size_t out_cap) {
-	static constexpr char symbols[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-	if (unlikely(out_cap == 0)) return;
-	const size_t need = ((len + 2) / 3) * 4 + 1;
-	if (unlikely(out_cap < need)) return;
-
-	size_t i = 0, o = 0;
-	while (i + 2 < len) {
-		const u32 v = ((u32)input[i] << 16) | ((u32)input[i + 1] << 8) | (u32)input[i + 2];
-		output[o++] = symbols[(v >> 18) & 0x3F];
-		output[o++] = symbols[(v >> 12) & 0x3F];
-		output[o++] = symbols[(v >> 6) & 0x3F];
-		output[o++] = symbols[v & 0x3F];
-		i += 3;
-	}
-
-	if (i + 1 < len) {
-		const u32 v = ((u32)input[i] << 16) | ((u32)input[i + 1] << 8);
-		output[o++] = symbols[(v >> 18) & 0x3F];
-		output[o++] = symbols[(v >> 12) & 0x3F];
-		output[o++] = symbols[(v >> 6) & 0x3F];
-		output[o++] = '=';
-	} else if (i < len) {
-		const u32 v = ((u32)input[i] << 16);
-		output[o++] = symbols[(v >> 18) & 0x3F];
-		output[o++] = symbols[(v >> 12) & 0x3F];
-		output[o++] = '=';
-		output[o++] = '=';
-	}
-
-	output[o] = '\0';
-}
